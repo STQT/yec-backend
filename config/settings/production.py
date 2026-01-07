@@ -65,18 +65,17 @@ SECURE_CONTENT_TYPE_NOSNIFF = env.bool(
 
 # STATIC & MEDIA
 # ------------------------
+# Using StaticFilesStorage instead of ManifestStaticFilesStorage
+# because nginx serves static files directly and source map files from django-jazzmin
+# cause issues with manifest storage
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.ManifestStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-
-# WhiteNoise settings
-# Ignore missing source maps (they're not critical for production)
-WHITENOISE_MANIFEST_STRICT = False
 
 # EMAIL
 # ------------------------------------------------------------------------------
