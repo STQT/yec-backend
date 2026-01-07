@@ -70,9 +70,13 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.ManifestStaticFilesStorage",
     },
 }
+
+# WhiteNoise settings
+# Ignore missing source maps (they're not critical for production)
+WHITENOISE_MANIFEST_STRICT = False
 
 # EMAIL
 # ------------------------------------------------------------------------------
