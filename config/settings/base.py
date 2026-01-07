@@ -195,6 +195,10 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.users.context_processors.allauth_settings",
             ],
+            # Built-in template tags and filters (available without {% load %})
+            "builtins": [
+                "apps.catalog.templatetags.catalog_filters",
+            ],
         },
     },
 ]
