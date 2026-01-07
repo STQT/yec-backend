@@ -49,4 +49,4 @@ services:
       - production_django_media:/usr/share/nginx/media:ro
       - production_django_static:/usr/share/nginx/static:ro
     ports:
-      - "80:80"
+      - "8051:80"
