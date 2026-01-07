@@ -4,12 +4,6 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-# Ensure staticfiles and media directories exist and have correct permissions
-# This needs to run as root before switching to django user
-mkdir -p /app/staticfiles /app/apps/media
-# chown -R django:django /app/staticfiles /app/apps/media
-chmod -R 755 /app/staticfiles /app/apps/media
-
 if [ -z "${POSTGRES_USER}" ]; then
     base_postgres_image_default_user='postgres'
     export POSTGRES_USER="${base_postgres_image_default_user}"
@@ -20,5 +14,4 @@ wait-for-it "${POSTGRES_HOST}:${POSTGRES_PORT}" -t 30
 
 >&2 echo 'PostgreSQL is available'
 
-# Switch to django user and execute the command
-# exec gosu django "$@"
+exec "$@"

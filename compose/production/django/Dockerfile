@@ -47,8 +47,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   gettext \
   # entrypoint
   wait-for-it \
-  # gosu for user switching
-  gosu \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -74,14 +72,8 @@ RUN chown django:django ${APP_HOME}
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Switch to django user for compilemessages
-USER django
-
 RUN DATABASE_URL="" \
   DJANGO_SETTINGS_MODULE="config.settings.test" \
   python manage.py compilemessages
-
-# Switch back to root for entrypoint (it will switch to django user inside)
-USER root
 
 ENTRYPOINT ["/entrypoint"]
