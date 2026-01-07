@@ -17,11 +17,11 @@ from apps.catalog.models import (
 @admin.register(TypeCarpetCollection)
 class TypeCarpetCollectionAdmin(admin.ModelAdmin):
     """Админка для типов ковров"""
-    list_display = ["image_preview", "type", "slug", "created_at"]
+    list_display = ["image_preview", "type", "slug"]
     list_display_links = ["type"]
     search_fields = ["type", "description"]
     prepopulated_fields = {"slug": ("type",)}
-    readonly_fields = ["image_preview", "created_at"]
+    readonly_fields = ["image_preview"]
     fieldsets = (
         ("Основная информация", {
             "fields": ("type", "slug", "description")
