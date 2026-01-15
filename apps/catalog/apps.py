@@ -10,3 +10,5 @@ class CatalogConfig(AppConfig):
         """
         Override this method in subclasses to run code when Django starts.
         """
+        # Импортируем translations для регистрации переводов
+        import apps.catalog.translation  # noqa: F401

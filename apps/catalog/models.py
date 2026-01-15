@@ -149,8 +149,13 @@ class News(models.Model):
     title = models.CharField(max_length=200, verbose_name='Заголовок')
     slug = models.SlugField(unique=True, verbose_name='Slug')
     description = models.TextField(blank=True, null=True, verbose_name='Краткое описание')
-    content = models.TextField(blank=True, null=True, verbose_name='Содержание')
-    image = models.ImageField(upload_to='photos/news/%Y/%m/', verbose_name='Изображение', blank=True, null=True)
+    cover_image = models.ImageField(
+        upload_to='photos/news/%Y/%m/', 
+        verbose_name='Главное изображение', 
+        blank=True, 
+        null=True,
+        help_text='Изображение для превью новости'
+    )
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
@@ -165,6 +170,72 @@ class News(models.Model):
 
     def get_absolute_url(self):
         return reverse('catalog:news_detail', kwargs={'news_slug': self.slug})
+
+
+class NewsContentBlock(models.Model):
+    """Блок контента новости (текст или изображения)"""
+    CONTENT_TYPE_CHOICES = [
+        ('text', 'Текстовый блок'),
+        ('images', 'Блок изображений'),
+    ]
+    
+    news = models.ForeignKey(
+        News,
+        on_delete=models.CASCADE,
+        related_name='content_blocks',
+        verbose_name='Новость'
+    )
+    content_type = models.CharField(
+        max_length=10,
+        choices=CONTENT_TYPE_CHOICES,
+        default='text',
+        verbose_name='Тип блока'
+    )
+    text_content = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Текстовое содержание',
+        help_text='Используется для текстовых блоков. Поддерживает HTML (CKEditor)'
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок')
+    
+    def __str__(self):
+        return f"{self.news.title} - {self.get_content_type_display()} #{self.order}"
+    
+    class Meta:
+        verbose_name = 'Блок контента новости'
+        verbose_name_plural = 'Блоки контента новости'
+        ordering = ['order']
+
+
+class NewsImage(models.Model):
+    """Изображение для блока изображений новости"""
+    content_block = models.ForeignKey(
+        NewsContentBlock,
+        on_delete=models.CASCADE,
+        related_name='images',
+        verbose_name='Блок контента',
+        limit_choices_to={'content_type': 'images'}
+    )
+    image = models.ImageField(
+        upload_to='photos/news/content/%Y/%m/',
+        verbose_name='Изображение'
+    )
+    caption = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name='Подпись к изображению'
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок')
+    
+    def __str__(self):
+        return f"Image {self.order} - {self.content_block.news.title}"
+    
+    class Meta:
+        verbose_name = 'Изображение новости'
+        verbose_name_plural = 'Изображения новости'
+        ordering = ['order']
 
 
 # Модель для галереи
@@ -183,3 +254,339 @@ class Gallery(models.Model):
         verbose_name = 'Изображение галереи'
         verbose_name_plural = 'Галерея'
         ordering = ['order', '-created_at']
+
+
+# Модель для главной страницы
+class HomePage(models.Model):
+    """Модель главной страницы с мультиязычными полями"""
+    image = models.ImageField(upload_to='photos/homepage/%Y/%m/', verbose_name='Изображение')
+    
+    # Мультиязычные поля
+    title = models.CharField(max_length=200, verbose_name='Заголовок')
+    description = models.TextField(verbose_name='Описание')
+    collection_link = models.CharField(max_length=200, verbose_name='Ссылка на коллекцию')
+    
+    # Поля для шоурума
+    showroom_title = models.CharField(max_length=200, verbose_name='Заголовок шоурума')
+    showroom_link = models.CharField(max_length=200, verbose_name='Ссылка на шоурум')
+    
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Главная страница'
+        verbose_name_plural = 'Главная страница'
+        ordering = ['-created_at']
+
+
+# Модель для страницы "О компании"
+
+class AboutPage(models.Model):
+    """Модель страницы о компании - все данные в одной модели"""
+    
+    # Основная информация о компании
+    company_title = models.CharField(max_length=200, verbose_name='Название компании')
+    company_subtitle = models.CharField(max_length=200, blank=True, null=True, verbose_name='Подзаголовок')
+    company_description = models.TextField(verbose_name='Описание компании')
+    main_image = models.ImageField(upload_to='photos/about/%Y/%m/', verbose_name='Главное изображение')
+    showroom_image = models.ImageField(upload_to='photos/about/showroom/%Y/%m/', verbose_name='Изображение шоурума')
+    
+    # Заголовки секций
+    production_section_title = models.CharField(
+        max_length=200, 
+        default='Ishlab chiqarish jarayoni', 
+        verbose_name='Заголовок секции производства'
+    )
+    history_section_title = models.CharField(
+        max_length=200, 
+        default='Kompaniya tarixi',
+        verbose_name='Заголовок секции истории'
+    )
+    capacity_section_title = models.CharField(
+        max_length=200, 
+        default='Ishlab chiqarish hajmi',
+        verbose_name='Заголовок секции объемов'
+    )
+    dealer_section_title = models.CharField(
+        max_length=200, 
+        default='Dilerlar uchun hamkorlik',
+        verbose_name='Заголовок секции для дилеров'
+    )
+    showroom_button_text = models.CharField(
+        max_length=100, 
+        default="To'liq ekranda ko'rish",
+        verbose_name='Текст кнопки шоурума'
+    )
+    
+    # Этапы производства (JSON)
+    # Формат: [{"order": 1, "title": "...", "title_ru": "...", "title_en": "...", 
+    #           "description": "...", "description_ru": "...", "description_en": "...", "image": "url"}]
+    production_steps = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='Этапы производства',
+        help_text='Список этапов производства с переводами'
+    )
+    
+    # История компании (JSON)
+    # Формат: [{"year": 2005, "title": "...", "title_ru": "...", "title_en": "...",
+    #           "description": "...", "description_ru": "...", "description_en": "...", "image": "url"}]
+    company_history = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='История компании',
+        help_text='Временная шкала истории компании с переводами'
+    )
+    
+    # Объемы производства (JSON)
+    # Формат: [{"year": 2005, "capacity": "1 000 000 mln. m²", "capacity_ru": "...", "capacity_en": "...",
+    #           "description": "...", "description_ru": "...", "description_en": "...", "image": "url"}]
+    production_capacity = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='Объемы производства',
+        help_text='Объемы производства по годам с переводами'
+    )
+    
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+
+    def __str__(self):
+        return self.company_title
+
+    class Meta:
+        verbose_name = 'Страница о компании'
+        verbose_name_plural = 'Страница о компании'
+        ordering = ['-created_at']
+
+
+class DealerAdvantage(models.Model):
+    """Модель преимуществ для дилеров"""
+    about_page = models.ForeignKey(
+        AboutPage,
+        on_delete=models.CASCADE,
+        related_name='dealer_advantages',
+        verbose_name='Страница о компании'
+    )
+    title = models.CharField(max_length=200, verbose_name='Заголовок')
+    description = models.TextField(verbose_name='Описание')
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Преимущество для дилеров'
+        verbose_name_plural = 'Преимущества для дилеров'
+        ordering = ['order']
+
+
+# Модели для страницы контактов
+
+class ContactPage(models.Model):
+    """Модель страницы контактов"""
+    # Основная информация
+    page_title = models.CharField(max_length=200, default='Bizning kontaktlarimiz', verbose_name='Заголовок страницы')
+    
+    # Адрес
+    address_label = models.CharField(max_length=100, default='Manzil', verbose_name='Метка адреса')
+    address = models.TextField(verbose_name='Адрес')
+    
+    # Телефон
+    phone_label = models.CharField(max_length=100, default='Telefon raqam', verbose_name='Метка телефона')
+    phone = models.CharField(max_length=50, verbose_name='Телефон')
+    
+    # Email
+    email_label = models.CharField(max_length=100, default='Elektron pochta', verbose_name='Метка email')
+    email = models.EmailField(verbose_name='Email')
+    
+    # Карта
+    map_embed_url = models.URLField(
+        blank=True, 
+        null=True, 
+        verbose_name='Ссылка на Google Maps',
+        help_text='Например: https://maps.google.com/...'
+    )
+    
+    # Форма обратной связи
+    form_title = models.CharField(max_length=200, default='Shaxsiy maslahat oling', verbose_name='Заголовок формы')
+    form_description = models.TextField(
+        default='Gilam tanlashda yordam kerakmi? Kontaktlaringizni qoldiring...',
+        verbose_name='Описание формы'
+    )
+    
+    # Социальные сети
+    facebook_url = models.URLField(blank=True, null=True, verbose_name='Facebook')
+    twitter_url = models.URLField(blank=True, null=True, verbose_name='Twitter')
+    linkedin_url = models.URLField(blank=True, null=True, verbose_name='LinkedIn')
+    instagram_url = models.URLField(blank=True, null=True, verbose_name='Instagram')
+    
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    
+    def __str__(self):
+        return self.page_title
+    
+    class Meta:
+        verbose_name = 'Страница контактов'
+        verbose_name_plural = 'Страница контактов'
+
+
+# Модели для торговых точек
+
+class Region(models.Model):
+    """Модель региона (области)"""
+    name = models.CharField(max_length=200, verbose_name='Название региона')
+    slug = models.SlugField(unique=True, verbose_name='Slug')
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = 'Регион'
+        verbose_name_plural = 'Регионы'
+        ordering = ['order', 'name']
+
+
+class SalesPoint(models.Model):
+    """Модель торговой точки"""
+    POINT_TYPE_CHOICES = [
+        ('olmazor', 'Olmazor (Jomiy bozori)'),
+        ('chilonzor', "Chilonzor (Bekto'pi bozori)"),
+        ('bektemir', "Bektemir (Qo'yliq bozori)"),
+        ('other', 'Boshqa'),
+    ]
+    
+    region = models.ForeignKey(
+        Region,
+        on_delete=models.CASCADE,
+        related_name='sales_points',
+        verbose_name='Регион'
+    )
+    
+    # Основная информация
+    name = models.CharField(max_length=200, verbose_name='Название точки')
+    point_type = models.CharField(
+        max_length=20,
+        choices=POINT_TYPE_CHOICES,
+        default='other',
+        verbose_name='Тип точки'
+    )
+    
+    # Адрес
+    address = models.TextField(verbose_name='Адрес')
+    location = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name='Местоположение',
+        help_text='Например: Farhod qo\'rg\'oni 25-A'
+    )
+    
+    # Контакты
+    phone = models.CharField(max_length=50, verbose_name='Телефон')
+    
+    # Ссылка на карту
+    map_link = models.URLField(
+        blank=True,
+        null=True,
+        verbose_name='Ссылка на карту',
+        help_text='Ссылка на Google Maps или Яндекс.Карты'
+    )
+    
+    # Дополнительно
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    
+    def __str__(self):
+        return f"{self.name} - {self.region.name}"
+    
+    class Meta:
+        verbose_name = 'Торговая точка'
+        verbose_name_plural = 'Торговые точки'
+        ordering = ['region__order', 'order', 'name']
+
+
+# Модель для формы заявки
+
+class ContactFormSubmission(models.Model):
+    """Модель заявки из формы обратной связи"""
+    STATUS_CHOICES = [
+        ('new', 'Новая'),
+        ('in_progress', 'В обработке'),
+        ('completed', 'Завершена'),
+        ('cancelled', 'Отменена'),
+    ]
+    
+    name = models.CharField(max_length=200, verbose_name='Имя')
+    phone = models.CharField(max_length=50, verbose_name='Телефон')
+    message = models.TextField(verbose_name='Сообщение')
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='new',
+        verbose_name='Статус'
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    notes = models.TextField(blank=True, null=True, verbose_name='Примечания администратора')
+    
+    def __str__(self):
+        return f"{self.name} - {self.phone} ({self.created_at.strftime('%d.%m.%Y')})"
+    
+    class Meta:
+        verbose_name = 'Заявка'
+        verbose_name_plural = 'Заявки'
+        ordering = ['-created_at']
+
+
+# Модель для FAQ
+
+class FAQ(models.Model):
+    """Модель вопросов и ответов"""
+    question = models.TextField(verbose_name='Вопрос')
+    answer = models.TextField(verbose_name='Ответ')
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    
+    def __str__(self):
+        return self.question[:100]
+    
+    class Meta:
+        verbose_name = 'Вопрос-Ответ (FAQ)'
+        verbose_name_plural = 'Вопросы-Ответы (FAQ)'
+        ordering = ['order']
+
+
+# Модель для карточек преимуществ на главной странице
+
+class AdvantageCard(models.Model):
+    """Модель карточки преимуществ для главной страницы"""
+    title = models.CharField(max_length=200, verbose_name='Заголовок')
+    description = models.TextField(verbose_name='Описание')
+    svg_icon = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='SVG иконка',
+        help_text='Вставьте код SVG иконки'
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок (1-4)')
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    
+    def __str__(self):
+        return f"Карточка {self.order}: {self.title}"
+    
+    class Meta:
+        verbose_name = 'Карточка преимущества'
+        verbose_name_plural = 'Карточки преимуществ'
+        ordering = ['order']

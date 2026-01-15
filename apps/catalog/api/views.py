@@ -4,22 +4,44 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from apps.catalog.models import Carpet, Collection, Color, Gallery, News, Room, Style
+from apps.catalog.models import (
+    AboutPage,
+    AdvantageCard,
+    Carpet,
+    Collection,
+    Color,
+    ContactFormSubmission,
+    ContactPage,
+    FAQ,
+    Gallery,
+    HomePage,
+    News,
+    Region,
+    Room,
+    Style,
+)
 
 from .serializers import (
+    AboutPageSerializer,
+    AdvantageCardSerializer,
     CarpetDetailSerializer,
     CarpetListSerializer,
     CollectionDetailSerializer,
     CollectionListSerializer,
     ColorSerializer,
+    ContactFormSubmissionSerializer,
+    ContactPageSerializer,
+    FAQSerializer,
     GallerySerializer,
+    HomePageSerializer,
     NewsDetailSerializer,
     NewsListSerializer,
+    RegionSerializer,
     RoomSerializer,
     StyleSerializer,
 )
@@ -179,3 +201,87 @@ class GalleryViewSet(ListModelMixin, GenericViewSet):
     queryset = Gallery.objects.filter(is_published=True)
     serializer_class = GallerySerializer
     pagination_class = StandardResultsSetPagination
+
+
+class HomePageViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для главной страницы"""
+    queryset = HomePage.objects.filter(is_published=True)
+    serializer_class = HomePageSerializer
+    pagination_class = None
+    
+    def list(self, request, *args, **kwargs):
+        """Возвращает первый опубликованный объект главной страницы"""
+        instance = self.get_queryset().first()
+        if instance:
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        return Response({}, status=status.HTTP_404_NOT_FOUND)
+
+
+class AboutPageViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для страницы о компании"""
+    queryset = AboutPage.objects.filter(is_published=True)
+    serializer_class = AboutPageSerializer
+    pagination_class = None
+    
+    def list(self, request, *args, **kwargs):
+        """Возвращает первый опубликованный объект страницы о компании со всеми данными в одном запросе"""
+        instance = self.get_queryset().first()
+        if instance:
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        return Response({}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ContactPageViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для страницы контактов"""
+    queryset = ContactPage.objects.filter(is_published=True)
+    serializer_class = ContactPageSerializer
+    pagination_class = None
+    
+    def list(self, request, *args, **kwargs):
+        """Возвращает первый опубликованный объект страницы контактов"""
+        instance = self.get_queryset().first()
+        if instance:
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        return Response({}, status=status.HTTP_404_NOT_FOUND)
+
+
+class RegionViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для регионов с торговыми точками"""
+    queryset = Region.objects.filter(is_published=True).prefetch_related('sales_points')
+    serializer_class = RegionSerializer
+    pagination_class = None
+    lookup_field = "slug"
+
+
+class ContactFormSubmissionViewSet(CreateModelMixin, GenericViewSet):
+    """ViewSet для создания заявок (только POST)"""
+    queryset = ContactFormSubmission.objects.all()
+    serializer_class = ContactFormSubmissionSerializer
+    
+    def create(self, request, *args, **kwargs):
+        """Создать новую заявку"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        return Response(
+            {"message": "Заявка успешно отправлена", "success": True},
+            status=status.HTTP_201_CREATED
+        )
+
+
+class FAQViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для FAQ"""
+    queryset = FAQ.objects.filter(is_published=True)
+    serializer_class = FAQSerializer
+    pagination_class = None
+
+
+class AdvantageCardViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для карточек преимуществ"""
+    queryset = AdvantageCard.objects.filter(is_published=True)
+    serializer_class = AdvantageCardSerializer
+    pagination_class = None
