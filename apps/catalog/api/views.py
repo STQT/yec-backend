@@ -26,6 +26,7 @@ from apps.catalog.models import (
     Region,
     Room,
     Style,
+    TypeCarpetCollection,
 )
 
 from .serializers import (
@@ -88,19 +89,24 @@ class CarpetFilter(filters.FilterSet):
         to_field_name="slug",
         queryset=Collection.objects.all(),
     )
+    type = filters.ModelChoiceFilter(
+        field_name="type__slug",
+        to_field_name="slug",
+        queryset=TypeCarpetCollection.objects.all(),
+    )
     is_new = filters.BooleanFilter(field_name="is_new")
     is_popular = filters.BooleanFilter(field_name="is_popular")
     material = filters.CharFilter(field_name="material", lookup_expr="icontains")
 
     class Meta:
         model = Carpet
-        fields = ["styles", "rooms", "colors", "collection", "is_new", "is_popular", "material"]
+        fields = ["styles", "rooms", "colors", "collection", "type", "is_new", "is_popular", "material"]
 
 
 @extend_schema(tags=["Ковры"])
 class CarpetViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     """ViewSet для ковров"""
-    queryset = Carpet.objects.filter(is_published=True).select_related("collection").prefetch_related(
+    queryset = Carpet.objects.filter(is_published=True).select_related("collection", "type").prefetch_related(
         "styles", "rooms", "colors"
     )
     pagination_class = StandardResultsSetPagination
@@ -152,7 +158,7 @@ class CarpetViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
 @extend_schema(tags=["Коллекции"])
 class CollectionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     """ViewSet для коллекций"""
-    queryset = Collection.objects.filter(is_published=True).select_related("type").annotate(
+    queryset = Collection.objects.filter(is_published=True).annotate(
         carpets_count=Count("carpets", filter=Q(carpets__is_published=True))
     )
     lookup_field = "slug"
@@ -177,7 +183,7 @@ class CollectionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         collection = self.get_object()
         carpets = Carpet.objects.filter(
             collection=collection, is_published=True
-        ).select_related("collection").prefetch_related("styles", "rooms", "colors")
+        ).select_related("collection", "type").prefetch_related("styles", "rooms", "colors")
         
         # Применяем фильтры из запроса
         filter_backend = DjangoFilterBackend()

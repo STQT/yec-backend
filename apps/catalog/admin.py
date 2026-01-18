@@ -56,16 +56,16 @@ class TypeCarpetCollectionAdmin(admin.ModelAdmin):
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
     """Админка для коллекций"""
-    list_display = ["image_preview", "name", "type", "is_published", "is_new", "carpets_count", "created_at"]
+    list_display = ["image_preview", "name", "is_published", "is_new", "carpets_count", "created_at"]
     list_display_links = ["name"]
-    list_filter = ["is_published", "is_new", "type", "created_at"]
+    list_filter = ["is_published", "is_new", "created_at"]
     search_fields = ["name", "description"]
     prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ["image_preview", "created_at", "update_at", "carpets_count"]
     date_hierarchy = "created_at"
     fieldsets = (
         ("Основная информация", {
-            "fields": ("name", "slug", "type", "description")
+            "fields": ("name", "slug", "description")
         }),
         ("Изображение", {
             "fields": ("image", "image_preview")
@@ -164,6 +164,7 @@ class CarpetAdmin(admin.ModelAdmin):
         "photo_preview",
         "code",
         "collection",
+        "type",
         "material",
         "is_new",
         "is_popular",
@@ -177,13 +178,14 @@ class CarpetAdmin(admin.ModelAdmin):
         "is_new",
         "is_popular",
         "collection",
+        "type",
         "styles",
         "rooms",
         "colors",
         "roll",
         "created_at"
     ]
-    search_fields = ["code", "material", "collection__name"]
+    search_fields = ["code", "material", "collection__name", "type__type"]
     readonly_fields = [
         "photo_preview",
         "watched",
@@ -194,7 +196,7 @@ class CarpetAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
     fieldsets = (
         ("Основная информация", {
-            "fields": ("code", "collection", "roll")
+            "fields": ("code", "collection", "type", "roll")
         }),
         ("Изображение", {
             "fields": ("photo", "photo_preview")
@@ -381,24 +383,28 @@ class HomePageAdmin(admin.ModelAdmin):
     readonly_fields = ["image_preview", "created_at", "update_at"]
     date_hierarchy = "created_at"
     fieldsets = (
-        ("Основная информация", {
-            "fields": ("title", "title_ru", "title_en", "description", "description_ru", "description_en")
-        }),
-        ("Изображение", {
-            "fields": ("image", "video", "image_preview")
-        }),
-        ("Ссылки", {
+        ("Заголовок и описание", {
             "fields": (
-                "collection_link", "collection_link_ru", "collection_link_en",
-                "showroom_title", "showroom_title_ru", "showroom_title_en",
-                "showroom_link", "showroom_link_ru", "showroom_link_en"
+                ("title", "title_ru", "title_en"),
+                ("description", "description_ru", "description_en")
             )
         }),
-        ("Настройки", {
-            "fields": ("is_published",)
+        ("Секция коллекций", {
+            "fields": (
+                ("collection_link", "collection_link_ru", "collection_link_en"),
+            )
         }),
-        ("Даты", {
-            "fields": ("created_at", "update_at")
+        ("Секция шоурума", {
+            "fields": (
+                ("showroom_title", "showroom_title_ru", "showroom_title_en"),
+                ("showroom_link", "showroom_link_ru", "showroom_link_en")
+            )
+        }),
+        ("Медиафайлы", {
+            "fields": ("image", "video", "image_preview")
+        }),
+        ("Настройки и даты", {
+            "fields": ("is_published", "created_at", "update_at")
         }),
     )
 
@@ -437,49 +443,64 @@ class AboutPageAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
     inlines = [DealerAdvantageInline]
     fieldsets = (
-        ("Основная информация", {
+        ("Описание компании", {
             "fields": (
-                "company_title", "company_title_ru", "company_title_en",
-                "company_subtitle", "company_subtitle_ru", "company_subtitle_en",
-                "company_description", "company_description_ru", "company_description_en"
+                ("company_title", "company_title_ru", "company_title_en"),
+                ("company_subtitle", "company_subtitle_ru", "company_subtitle_en"),
+                ("company_description", "company_description_ru", "company_description_en"),
+                "main_image", "main_image_preview",
             )
         }),
         ("Изображения", {
             "fields": (
-                "main_image", "main_image_preview",
-                "showroom_image", "showroom_image_preview"
+                
+                
             )
         }),
-        ("Заголовки секций", {
+        ("Секция производства - заголовок", {
             "fields": (
-                "production_section_title", "production_section_title_ru", "production_section_title_en",
-                "history_section_title", "history_section_title_ru", "history_section_title_en",
-                "capacity_section_title", "capacity_section_title_ru", "capacity_section_title_en",
-                "dealer_section_title", "dealer_section_title_ru", "dealer_section_title_en",
-                "showroom_button_text", "showroom_button_text_ru", "showroom_button_text_en"
+                ("production_section_title", "production_section_title_ru", "production_section_title_en"),
             )
         }),
-        ("Этапы производства", {
+        ("Секция производства - этапы", {
             "fields": ("production_steps",),
             "description": "Формат: [{\"order\": 1, \"title\": \"...\", \"title_ru\": \"...\", \"title_en\": \"...\", \"description\": \"...\", \"description_ru\": \"...\", \"description_en\": \"...\", \"image\": \"url\"}]"
         }),
-        ("История компании", {
+        ("Секция истории - заголовок", {
+            "fields": (
+                ("history_section_title", "history_section_title_ru", "history_section_title_en"),
+            )
+        }),
+        ("Секция истории - данные", {
             "fields": ("company_history",),
             "description": "Формат: [{\"year\": 2005, \"title\": \"...\", \"title_ru\": \"...\", \"title_en\": \"...\", \"description\": \"...\", \"description_ru\": \"...\", \"description_en\": \"...\", \"image\": \"url\"}]"
         }),
-        ("Объемы производства", {
+        ("Секция объемов производства - заголовок", {
+            "fields": (
+                ("capacity_section_title", "capacity_section_title_ru", "capacity_section_title_en"),
+            )
+        }),
+        ("Секция объемов производства - данные", {
             "fields": ("production_capacity",),
             "description": "Формат: [{\"year\": 2005, \"capacity\": \"...\", \"capacity_ru\": \"...\", \"capacity_en\": \"...\", \"description\": \"...\", \"description_ru\": \"...\", \"description_en\": \"...\", \"image\": \"url\"}]"
+        }),
+        ("Секция дилеров - заголовок", {
+            "fields": (
+                ("dealer_section_title", "dealer_section_title_ru", "dealer_section_title_en"),
+            )
+        }),
+        ("Секция шоурума", {
+            "fields": (
+                ("showroom_button_text", "showroom_button_text_ru", "showroom_button_text_en"),
+                ("showroom_image", "showroom_image_preview"),
+            )
         }),
         ("Справка по JSON", {
             "fields": ("json_help",),
             "classes": ("collapse",),
         }),
-        ("Настройки", {
-            "fields": ("is_published",)
-        }),
-        ("Даты", {
-            "fields": ("created_at", "update_at")
+        ("Настройки и даты", {
+            "fields": ("is_published", "created_at", "update_at")
         }),
     )
 
@@ -573,23 +594,23 @@ class ContactPageAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ("Заголовок страницы", {
-            "fields": ("page_title", "page_title_ru", "page_title_en")
+            "fields": (("page_title", "page_title_ru", "page_title_en"),)
         }),
-        ("Адрес", {
+        ("Секция адреса", {
             "fields": (
-                "address_label", "address_label_ru", "address_label_en",
-                "address", "address_ru", "address_en"
+                ("address_label", "address_label_ru", "address_label_en"),
+                ("address", "address_ru", "address_en")
             )
         }),
-        ("Телефон", {
+        ("Секция телефона", {
             "fields": (
-                "phone_label", "phone_label_ru", "phone_label_en",
+                ("phone_label", "phone_label_ru", "phone_label_en"),
                 "phone"
             )
         }),
-        ("Email", {
+        ("Секция email", {
             "fields": (
-                "email_label", "email_label_ru", "email_label_en",
+                ("email_label", "email_label_ru", "email_label_en"),
                 "email"
             )
         }),
@@ -597,21 +618,18 @@ class ContactPageAdmin(admin.ModelAdmin):
             "fields": ("map_embed_url",),
             "description": "Вставьте ссылку на Google Maps для встраивания карты"
         }),
-        ("Форма обратной связи", {
+        ("Секция формы обратной связи", {
             "fields": (
-                "form_title", "form_title_ru", "form_title_en",
-                "form_description", "form_description_ru", "form_description_en"
+                ("form_title", "form_title_ru", "form_title_en"),
+                ("form_description", "form_description_ru", "form_description_en")
             )
         }),
         ("Социальные сети", {
             "fields": ("facebook_url", "twitter_url", "linkedin_url", "instagram_url"),
             "classes": ("collapse",)
         }),
-        ("Настройки", {
-            "fields": ("is_published",)
-        }),
-        ("Даты", {
-            "fields": ("created_at", "update_at")
+        ("Настройки и даты", {
+            "fields": ("is_published", "created_at", "update_at")
         }),
     )
 
@@ -644,9 +662,9 @@ class RegionAdmin(admin.ModelAdmin):
     inlines = [SalesPointInline]
     
     fieldsets = (
-        ("Основная информация", {
+        ("Название региона", {
             "fields": (
-                "name", "name_ru", "name_en",
+                ("name", "name_ru", "name_en"),
                 "slug",
                 "order"
             )
@@ -672,17 +690,21 @@ class SalesPointAdmin(admin.ModelAdmin):
     list_editable = ["order", "is_published"]
     
     fieldsets = (
-        ("Основная информация", {
+        ("Название точки", {
             "fields": (
                 "region",
-                "name", "name_ru", "name_en",
+                ("name", "name_ru", "name_en"),
                 "point_type"
             )
         }),
         ("Адрес", {
             "fields": (
-                "address", "address_ru", "address_en",
-                "location", "location_ru", "location_en"
+                ("address", "address_ru", "address_en"),
+            )
+        }),
+        ("Локация", {
+            "fields": (
+                ("location", "location_ru", "location_en"),
             )
         }),
         ("Контакты", {
@@ -737,10 +759,10 @@ class FAQAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ("Вопрос", {
-            "fields": ("question", "question_ru", "question_en")
+            "fields": (("question", "question_ru", "question_en"),)
         }),
         ("Ответ", {
-            "fields": ("answer", "answer_ru", "answer_en")
+            "fields": (("answer", "answer_ru", "answer_en"),)
         }),
         ("Настройки", {
             "fields": ("order", "is_published")
@@ -763,11 +785,15 @@ class AdvantageCardAdmin(admin.ModelAdmin):
     list_editable = ["order", "is_published"]
     
     fieldsets = (
-        ("Основная информация", {
+        ("Заголовок", {
             "fields": (
                 "order",
-                "title", "title_ru", "title_en",
-                "description", "description_ru", "description_en"
+                ("title", "title_ru", "title_en")
+            )
+        }),
+        ("Описание", {
+            "fields": (
+                ("description", "description_ru", "description_en"),
             )
         }),
         ("SVG Иконка", {

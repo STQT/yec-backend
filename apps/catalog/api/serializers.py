@@ -74,7 +74,6 @@ class ColorSerializer(serializers.ModelSerializer):
 
 class CollectionListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка коллекций"""
-    type_name = serializers.CharField(source="type.type", read_only=True)
     carpets_count = serializers.IntegerField(source="carpets.count", read_only=True)
     image = ImageFieldSerializer(required=False, allow_null=True)
 
@@ -86,7 +85,6 @@ class CollectionListSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "image",
-            "type_name",
             "is_new",
             "carpets_count",
             "created_at",
@@ -96,7 +94,6 @@ class CollectionListSerializer(serializers.ModelSerializer):
 
 class CollectionDetailSerializer(serializers.ModelSerializer):
     """Сериализатор для детальной информации о коллекции"""
-    type = TypeCarpetCollectionSerializer(read_only=True)
     image = ImageFieldSerializer(required=False, allow_null=True)
 
     class Meta:
@@ -107,7 +104,6 @@ class CollectionDetailSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "image",
-            "type",
             "is_published",
             "is_new",
             "created_at",
@@ -120,6 +116,8 @@ class CarpetListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка ковров"""
     collection_name = serializers.CharField(source="collection.name", read_only=True)
     collection_slug = serializers.CharField(source="collection.slug", read_only=True)
+    type_name = serializers.CharField(source="type.type", read_only=True)
+    type_slug = serializers.CharField(source="type.slug", read_only=True)
     styles = StyleSerializer(many=True, read_only=True)
     rooms = RoomSerializer(many=True, read_only=True)
     colors = ColorSerializer(many=True, read_only=True)
@@ -133,6 +131,8 @@ class CarpetListSerializer(serializers.ModelSerializer):
             "photo",
             "collection_name",
             "collection_slug",
+            "type_name",
+            "type_slug",
             "material",
             "is_new",
             "is_popular",
@@ -148,6 +148,7 @@ class CarpetListSerializer(serializers.ModelSerializer):
 class CarpetDetailSerializer(serializers.ModelSerializer):
     """Сериализатор для детальной информации о ковре"""
     collection = CollectionListSerializer(read_only=True)
+    type = TypeCarpetCollectionSerializer(read_only=True)
     styles = StyleSerializer(many=True, read_only=True)
     rooms = RoomSerializer(many=True, read_only=True)
     colors = ColorSerializer(many=True, read_only=True)
@@ -160,6 +161,7 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
             "code",
             "photo",
             "collection",
+            "type",
             "material",
             "density",
             "base",

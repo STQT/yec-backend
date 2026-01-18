@@ -26,7 +26,6 @@ class Collection(models.Model):
     name = models.CharField(max_length=50, verbose_name='Категория')
     description = models.TextField(default='Описания коллекции', verbose_name='Описания', blank=True, null=True)
     image = models.ImageField(upload_to='photos/collection_avatar/%Y/%m/', verbose_name='photo Коллекции')
-    type = models.ForeignKey(TypeCarpetCollection, on_delete=models.CASCADE, verbose_name='Тип ковра')
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     slug = models.SlugField(unique=True, null=True, verbose_name='Slug')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
@@ -103,6 +102,7 @@ class Carpet(models.Model):
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, verbose_name='Коллекция',
                                    related_name='carpets')
+    type = models.ForeignKey(TypeCarpetCollection, on_delete=models.CASCADE, verbose_name='Тип ковра', null=True, blank=True)
     roll = models.BooleanField(default=False, verbose_name='Рулон')
     
     # Новые поля из Figma
