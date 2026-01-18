@@ -149,7 +149,7 @@ class ColorAdmin(admin.ModelAdmin):
     carpets_count.short_description = "Количество ковров"
 
 
-class CarpetImageInline(admin.TabularInline):
+class CarpetImageInline(admin.StackedInline):
     """Inline для дополнительных изображений ковра (если понадобится в будущем)"""
     model = Carpet
     extra = 0
@@ -236,12 +236,18 @@ class CarpetAdmin(admin.ModelAdmin):
     photo_preview.short_description = "Превью"
 
 
-class NewsImageInline(admin.TabularInline):
+class NewsImageInline(admin.StackedInline):
     """Inline для изображений блока контента"""
     model = NewsImage
     extra = 0
     max_num = 3
-    fields = ["image", "caption", "caption_ru", "caption_en", "order"]
+    fields = [
+        "image",
+        "caption",
+        "caption_ru",
+        "caption_en",
+        "order"
+    ]
     ordering = ["order"]
     
     def get_formset(self, request, obj=None, **kwargs):
@@ -257,7 +263,9 @@ class NewsContentBlockInline(admin.StackedInline):
     fields = [
         "content_type",
         "order",
-        "text_content", "text_content_ru", "text_content_en",
+        "text_content",
+        "text_content_ru",
+        "text_content_en",
     ]
     ordering = ["order"]
     
@@ -385,19 +393,29 @@ class HomePageAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Заголовок и описание", {
             "fields": (
-                ("title", "title_ru", "title_en"),
-                ("description", "description_ru", "description_en")
+                "title",
+                "title_ru",
+                "title_en",
+                "description",
+                "description_ru",
+                "description_en"
             )
         }),
         ("Секция коллекций", {
             "fields": (
-                ("collection_link", "collection_link_ru", "collection_link_en"),
+                "collection_link",
+                "collection_link_ru",
+                "collection_link_en",
             )
         }),
         ("Секция шоурума", {
             "fields": (
-                ("showroom_title", "showroom_title_ru", "showroom_title_en"),
-                ("showroom_link", "showroom_link_ru", "showroom_link_en")
+                "showroom_title",
+                "showroom_title_ru",
+                "showroom_title_en",
+                "showroom_link",
+                "showroom_link_ru",
+                "showroom_link_en"
             )
         }),
         ("Медиафайлы", {
@@ -419,14 +437,18 @@ class HomePageAdmin(admin.ModelAdmin):
     image_preview.short_description = "Превью"
 
 
-class DealerAdvantageInline(admin.TabularInline):
+class DealerAdvantageInline(admin.StackedInline):
     """Inline для преимуществ дилеров"""
     model = DealerAdvantage
     extra = 1
     fields = [
         "order",
-        "title", "title_ru", "title_en",
-        "description", "description_ru", "description_en",
+        "title",
+        "title_ru",
+        "title_en",
+        "description",
+        "description_ru",
+        "description_en",
         "is_published"
     ]
     ordering = ["order"]
@@ -445,21 +467,24 @@ class AboutPageAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Описание компании", {
             "fields": (
-                ("company_title", "company_title_ru", "company_title_en"),
-                ("company_subtitle", "company_subtitle_ru", "company_subtitle_en"),
-                ("company_description", "company_description_ru", "company_description_en"),
-                "main_image", "main_image_preview",
-            )
-        }),
-        ("Изображения", {
-            "fields": (
-                
-                
+                "company_title",
+                "company_title_ru",
+                "company_title_en",
+                "company_subtitle",
+                "company_subtitle_ru",
+                "company_subtitle_en",
+                "company_description",
+                "company_description_ru",
+                "company_description_en",
+                "main_image",
+                "main_image_preview",
             )
         }),
         ("Секция производства - заголовок", {
             "fields": (
-                ("production_section_title", "production_section_title_ru", "production_section_title_en"),
+                "production_section_title",
+                "production_section_title_ru",
+                "production_section_title_en",
             )
         }),
         ("Секция производства - этапы", {
@@ -468,7 +493,9 @@ class AboutPageAdmin(admin.ModelAdmin):
         }),
         ("Секция истории - заголовок", {
             "fields": (
-                ("history_section_title", "history_section_title_ru", "history_section_title_en"),
+                "history_section_title",
+                "history_section_title_ru",
+                "history_section_title_en",
             )
         }),
         ("Секция истории - данные", {
@@ -477,7 +504,9 @@ class AboutPageAdmin(admin.ModelAdmin):
         }),
         ("Секция объемов производства - заголовок", {
             "fields": (
-                ("capacity_section_title", "capacity_section_title_ru", "capacity_section_title_en"),
+                "capacity_section_title",
+                "capacity_section_title_ru",
+                "capacity_section_title_en",
             )
         }),
         ("Секция объемов производства - данные", {
@@ -486,13 +515,18 @@ class AboutPageAdmin(admin.ModelAdmin):
         }),
         ("Секция дилеров - заголовок", {
             "fields": (
-                ("dealer_section_title", "dealer_section_title_ru", "dealer_section_title_en"),
+                "dealer_section_title",
+                "dealer_section_title_ru",
+                "dealer_section_title_en",
             )
         }),
         ("Секция шоурума", {
             "fields": (
-                ("showroom_button_text", "showroom_button_text_ru", "showroom_button_text_en"),
-                ("showroom_image", "showroom_image_preview"),
+                "showroom_button_text",
+                "showroom_button_text_ru",
+                "showroom_button_text_en",
+                "showroom_image",
+                "showroom_image_preview",
             )
         }),
         ("Справка по JSON", {
@@ -594,23 +628,35 @@ class ContactPageAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ("Заголовок страницы", {
-            "fields": (("page_title", "page_title_ru", "page_title_en"),)
+            "fields": (
+                "page_title",
+                "page_title_ru",
+                "page_title_en",
+            )
         }),
         ("Секция адреса", {
             "fields": (
-                ("address_label", "address_label_ru", "address_label_en"),
-                ("address", "address_ru", "address_en")
+                "address_label",
+                "address_label_ru",
+                "address_label_en",
+                "address",
+                "address_ru",
+                "address_en"
             )
         }),
         ("Секция телефона", {
             "fields": (
-                ("phone_label", "phone_label_ru", "phone_label_en"),
+                "phone_label",
+                "phone_label_ru",
+                "phone_label_en",
                 "phone"
             )
         }),
         ("Секция email", {
             "fields": (
-                ("email_label", "email_label_ru", "email_label_en"),
+                "email_label",
+                "email_label_ru",
+                "email_label_en",
                 "email"
             )
         }),
@@ -620,8 +666,12 @@ class ContactPageAdmin(admin.ModelAdmin):
         }),
         ("Секция формы обратной связи", {
             "fields": (
-                ("form_title", "form_title_ru", "form_title_en"),
-                ("form_description", "form_description_ru", "form_description_en")
+                "form_title",
+                "form_title_ru",
+                "form_title_en",
+                "form_description",
+                "form_description_ru",
+                "form_description_en"
             )
         }),
         ("Социальные сети", {
@@ -634,14 +684,17 @@ class ContactPageAdmin(admin.ModelAdmin):
     )
 
 
-class SalesPointInline(admin.TabularInline):
+class SalesPointInline(admin.StackedInline):
     """Inline для торговых точек региона"""
     model = SalesPoint
     extra = 0
     fields = [
-        "name", "name_ru", "name_en",
+        "name",
+        "name_ru",
+        "name_en",
         "point_type",
-        "address", "location",
+        "address",
+        "location",
         "phone",
         "map_link",
         "order",
@@ -664,7 +717,9 @@ class RegionAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Название региона", {
             "fields": (
-                ("name", "name_ru", "name_en"),
+                "name",
+                "name_ru",
+                "name_en",
                 "slug",
                 "order"
             )
@@ -693,18 +748,24 @@ class SalesPointAdmin(admin.ModelAdmin):
         ("Название точки", {
             "fields": (
                 "region",
-                ("name", "name_ru", "name_en"),
+                "name",
+                "name_ru",
+                "name_en",
                 "point_type"
             )
         }),
         ("Адрес", {
             "fields": (
-                ("address", "address_ru", "address_en"),
+                "address",
+                "address_ru",
+                "address_en",
             )
         }),
         ("Локация", {
             "fields": (
-                ("location", "location_ru", "location_en"),
+                "location",
+                "location_ru",
+                "location_en",
             )
         }),
         ("Контакты", {
@@ -759,10 +820,18 @@ class FAQAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ("Вопрос", {
-            "fields": (("question", "question_ru", "question_en"),)
+            "fields": (
+                "question",
+                "question_ru",
+                "question_en",
+            )
         }),
         ("Ответ", {
-            "fields": (("answer", "answer_ru", "answer_en"),)
+            "fields": (
+                "answer",
+                "answer_ru",
+                "answer_en",
+            )
         }),
         ("Настройки", {
             "fields": ("order", "is_published")
@@ -788,12 +857,16 @@ class AdvantageCardAdmin(admin.ModelAdmin):
         ("Заголовок", {
             "fields": (
                 "order",
-                ("title", "title_ru", "title_en")
+                "title",
+                "title_ru",
+                "title_en"
             )
         }),
         ("Описание", {
             "fields": (
-                ("description", "description_ru", "description_en"),
+                "description",
+                "description_ru",
+                "description_en",
             )
         }),
         ("SVG Иконка", {
