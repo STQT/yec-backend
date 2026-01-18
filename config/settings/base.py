@@ -389,15 +389,6 @@ JAZZMIN_SETTINGS = {
     # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
     "order_with_respect_to": ["catalog", "auth"],
     # Custom links to append to app groups, keyed on app name
-    "custom_links": {
-        "catalog": [
-            {
-                "name": "Статистика",
-                "url": "admin:catalog_carpet_changelist",
-                "icon": "fas fa-chart-bar",
-            }
-        ]
-    },
     # Custom icons for side menu apps/models
     # See https://fontawesome.com/icons for available icons
     "icons": {

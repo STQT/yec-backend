@@ -242,7 +242,6 @@ class NewsImage(models.Model):
 class Gallery(models.Model):
     title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Название')
     image = models.ImageField(upload_to='photos/gallery/%Y/%m/', verbose_name='Изображение')
-    description = models.TextField(blank=True, null=True, verbose_name='Описание')
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')

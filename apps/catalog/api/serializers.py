@@ -311,7 +311,6 @@ class GallerySerializer(serializers.ModelSerializer):
             "id",
             "title",
             "image",
-            "description",
             "created_at",
             "order",
         ]

@@ -266,12 +266,27 @@ class NewsContentBlockInline(admin.StackedInline):
         "text_content",
         "text_content_ru",
         "text_content_en",
+        "images_help"
     ]
+    readonly_fields = ["images_help"]
     ordering = ["order"]
+    
+    def images_help(self, obj):
+        """Помощь по добавлению изображений"""
+        if obj and obj.pk and obj.content_type == 'images':
+            url = f'/admin/catalog/newscontentblock/{obj.pk}/change/'
+            return format_html(
+                '<a href="{}" target="_blank" style="display: inline-block; padding: 8px 12px; background: #417690; color: white; text-decoration: none; border-radius: 4px;">➕ Добавить/редактировать изображения для этого блока</a>',
+                url
+            )
+        elif obj and obj.pk:
+            return format_html('<p style="color: #666;">Измените тип блока на "Блок изображений" чтобы добавить изображения</p>')
+        return format_html('<p style="color: #666;">Сохраните блок сначала, чтобы добавить изображения</p>')
+    images_help.short_description = "Изображения"
     
     class Media:
         js = (
-            'https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js',
+            'https://cdn.ckeditor.com/4.25.1-lts/standard/ckeditor.js',
             'js/ckeditor_init.js',
         )
 
@@ -318,9 +333,9 @@ class NewsAdmin(admin.ModelAdmin):
     cover_image_preview.short_description = "Превью"
 
 
-@admin.register(NewsContentBlock)
+# NewsContentBlock - скрытая админка для редактирования изображений
 class NewsContentBlockAdmin(admin.ModelAdmin):
-    """Админка для блоков контента (для добавления изображений)"""
+    """Админка для блоков контента (для редактирования изображений)"""
     list_display = ["news", "content_type", "order"]
     list_filter = ["content_type", "news"]
     search_fields = ["news__title"]
@@ -331,30 +346,40 @@ class NewsContentBlockAdmin(admin.ModelAdmin):
             "fields": ("news", "content_type", "order")
         }),
         ("Текстовое содержание", {
-            "fields": ("text_content", "text_content_ru", "text_content_en"),
+            "fields": (
+                "text_content",
+                "text_content_ru",
+                "text_content_en"
+            ),
             "description": "Заполняется только для текстовых блоков"
         }),
     )
     
     class Media:
         js = (
-            'https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js',
+            'https://cdn.ckeditor.com/4.25.1-lts/standard/ckeditor.js',
             'js/ckeditor_init.js',
         )
+    
+    def has_module_permission(self, request):
+        """Скрыть из списка приложений в админке"""
+        return False
+
+admin.site.register(NewsContentBlock, NewsContentBlockAdmin)
 
 
 @admin.register(Gallery)
 class GalleryAdmin(admin.ModelAdmin):
     """Админка для галереи"""
     list_display = ["image_preview", "title", "order", "is_published", "created_at"]
-    list_display_links = ["title"]
+    list_display_links = ["title", "image_preview"]
     list_filter = ["is_published", "created_at"]
-    search_fields = ["title", "description"]
+    search_fields = ["title"]
     readonly_fields = ["image_preview", "created_at"]
     list_editable = ["order", "is_published"]
     fieldsets = (
         ("Основная информация", {
-            "fields": ("title", "description", "order")
+            "fields": ("title", "order")
         }),
         ("Изображение", {
             "fields": ("image", "image_preview")
@@ -735,50 +760,7 @@ class RegionAdmin(admin.ModelAdmin):
     sales_points_count.short_description = "Количество точек"
 
 
-@admin.register(SalesPoint)
-class SalesPointAdmin(admin.ModelAdmin):
-    """Админка для торговых точек"""
-    list_display = ["name", "region", "point_type", "phone", "order", "is_published"]
-    list_display_links = ["name"]
-    list_filter = ["region", "point_type", "is_published"]
-    search_fields = ["name", "address", "location", "phone"]
-    list_editable = ["order", "is_published"]
-    
-    fieldsets = (
-        ("Название точки", {
-            "fields": (
-                "region",
-                "name",
-                "name_ru",
-                "name_en",
-                "point_type"
-            )
-        }),
-        ("Адрес", {
-            "fields": (
-                "address",
-                "address_ru",
-                "address_en",
-            )
-        }),
-        ("Локация", {
-            "fields": (
-                "location",
-                "location_ru",
-                "location_en",
-            )
-        }),
-        ("Контакты", {
-            "fields": ("phone",)
-        }),
-        ("Карта", {
-            "fields": ("map_link",),
-            "description": "Ссылка на Google Maps или Яндекс.Карты"
-        }),
-        ("Настройки", {
-            "fields": ("order", "is_published")
-        }),
-    )
+# SalesPoint управляется через inline в Region - не нужна отдельная админка
 
 
 @admin.register(ContactFormSubmission)
@@ -844,42 +826,4 @@ class FAQAdmin(admin.ModelAdmin):
     question_short.short_description = "Вопрос"
 
 
-@admin.register(AdvantageCard)
-class AdvantageCardAdmin(admin.ModelAdmin):
-    """Админка для карточек преимуществ"""
-    list_display = ["order", "title", "has_icon", "is_published"]
-    list_display_links = ["title"]
-    list_filter = ["is_published"]
-    search_fields = ["title", "description"]
-    list_editable = ["order", "is_published"]
-    
-    fieldsets = (
-        ("Заголовок", {
-            "fields": (
-                "order",
-                "title",
-                "title_ru",
-                "title_en"
-            )
-        }),
-        ("Описание", {
-            "fields": (
-                "description",
-                "description_ru",
-                "description_en",
-            )
-        }),
-        ("SVG Иконка", {
-            "fields": ("svg_icon",),
-            "description": "Вставьте код SVG для иконки (опционально)"
-        }),
-        ("Настройки", {
-            "fields": ("is_published",)
-        }),
-    )
-    
-    def has_icon(self, obj):
-        """Есть ли иконка"""
-        return bool(obj.svg_icon)
-    has_icon.boolean = True
-    has_icon.short_description = "Иконка"
+# AdvantageCard управляется через inline на главной странице - не нужна отдельная админка
