@@ -260,6 +260,7 @@ class Gallery(models.Model):
 class HomePage(models.Model):
     """Модель главной страницы с мультиязычными полями"""
     image = models.ImageField(upload_to='photos/homepage/%Y/%m/', verbose_name='Изображение')
+    video = models.FileField(upload_to='files/homepage/%Y/%m/', verbose_name='Видео')
     
     # Мультиязычные поля
     title = models.CharField(max_length=200, verbose_name='Заголовок')
@@ -278,8 +279,8 @@ class HomePage(models.Model):
         return self.title
 
     class Meta:
-        verbose_name = 'Главная страница'
-        verbose_name_plural = 'Главная страница'
+        verbose_name = 'Главная секция'
+        verbose_name_plural = 'Главная секция'
         ordering = ['-created_at']
 
 

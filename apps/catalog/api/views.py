@@ -1,6 +1,8 @@
 from django.db.models import Count, Q
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
@@ -46,6 +48,16 @@ from .serializers import (
     StyleSerializer,
 )
 
+# OpenAPI параметр для языка
+LANG_PARAMETER = OpenApiParameter(
+    name="lang",
+    type=OpenApiTypes.STR,
+    location=OpenApiParameter.QUERY,
+    description="Язык контента (uz, ru, en). По умолчанию: uz",
+    required=False,
+    enum=["uz", "ru", "en"],
+)
+
 
 class StandardResultsSetPagination(PageNumberPagination):
     """Пагинация для списков"""
@@ -85,6 +97,7 @@ class CarpetFilter(filters.FilterSet):
         fields = ["styles", "rooms", "colors", "collection", "is_new", "is_popular", "material"]
 
 
+@extend_schema(tags=["Ковры"])
 class CarpetViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     """ViewSet для ковров"""
     queryset = Carpet.objects.filter(is_published=True).select_related("collection").prefetch_related(
@@ -100,6 +113,14 @@ class CarpetViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         if self.action == "retrieve":
             return CarpetDetailSerializer
         return CarpetListSerializer
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -128,6 +149,7 @@ class CarpetViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         return Response({"count": count}, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=["Коллекции"])
 class CollectionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     """ViewSet для коллекций"""
     queryset = Collection.objects.filter(is_published=True).select_related("type").annotate(
@@ -139,7 +161,16 @@ class CollectionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         if self.action == "retrieve":
             return CollectionDetailSerializer
         return CollectionListSerializer
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
+    @extend_schema(parameters=[LANG_PARAMETER])
     @action(detail=True, methods=["get"])
     def carpets(self, request, slug=None):
         """Получить ковры коллекции"""
@@ -163,27 +194,43 @@ class CollectionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         return Response(serializer.data)
 
 
+@extend_schema(tags=["Стили"])
 class StyleViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для стилей"""
     queryset = Style.objects.all()
     serializer_class = StyleSerializer
     pagination_class = None
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
+@extend_schema(tags=["Комнаты"])
 class RoomViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для комнат"""
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
     pagination_class = None
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
+@extend_schema(tags=["Цвета"])
 class ColorViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для цветов"""
     queryset = Color.objects.all()
     serializer_class = ColorSerializer
     pagination_class = None
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
+@extend_schema(tags=["Новости"])
 class NewsViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     """ViewSet для новостей"""
     queryset = News.objects.filter(is_published=True)
@@ -194,21 +241,36 @@ class NewsViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         if self.action == "retrieve":
             return NewsDetailSerializer
         return NewsListSerializer
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
 
+@extend_schema(tags=["Галерея"])
 class GalleryViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для галереи"""
     queryset = Gallery.objects.filter(is_published=True)
     serializer_class = GallerySerializer
     pagination_class = StandardResultsSetPagination
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
+@extend_schema(tags=["Главная секция"])
 class HomePageViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для главной страницы"""
     queryset = HomePage.objects.filter(is_published=True)
     serializer_class = HomePageSerializer
     pagination_class = None
     
+    @extend_schema(parameters=[LANG_PARAMETER])
     def list(self, request, *args, **kwargs):
         """Возвращает первый опубликованный объект главной страницы"""
         instance = self.get_queryset().first()
@@ -218,12 +280,14 @@ class HomePageViewSet(ListModelMixin, GenericViewSet):
         return Response({}, status=status.HTTP_404_NOT_FOUND)
 
 
+@extend_schema(tags=["О компании"])
 class AboutPageViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для страницы о компании"""
     queryset = AboutPage.objects.filter(is_published=True)
     serializer_class = AboutPageSerializer
     pagination_class = None
     
+    @extend_schema(parameters=[LANG_PARAMETER])
     def list(self, request, *args, **kwargs):
         """Возвращает первый опубликованный объект страницы о компании со всеми данными в одном запросе"""
         instance = self.get_queryset().first()
@@ -233,12 +297,14 @@ class AboutPageViewSet(ListModelMixin, GenericViewSet):
         return Response({}, status=status.HTTP_404_NOT_FOUND)
 
 
+@extend_schema(tags=["Контакты"])
 class ContactPageViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для страницы контактов"""
     queryset = ContactPage.objects.filter(is_published=True)
     serializer_class = ContactPageSerializer
     pagination_class = None
     
+    @extend_schema(parameters=[LANG_PARAMETER])
     def list(self, request, *args, **kwargs):
         """Возвращает первый опубликованный объект страницы контактов"""
         instance = self.get_queryset().first()
@@ -248,14 +314,20 @@ class ContactPageViewSet(ListModelMixin, GenericViewSet):
         return Response({}, status=status.HTTP_404_NOT_FOUND)
 
 
+@extend_schema(tags=["Регионы и торговые точки"])
 class RegionViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для регионов с торговыми точками"""
     queryset = Region.objects.filter(is_published=True).prefetch_related('sales_points')
     serializer_class = RegionSerializer
     pagination_class = None
     lookup_field = "slug"
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
+@extend_schema(tags=["Форма обратной связи"])
 class ContactFormSubmissionViewSet(CreateModelMixin, GenericViewSet):
     """ViewSet для создания заявок (только POST)"""
     queryset = ContactFormSubmission.objects.all()
@@ -273,15 +345,25 @@ class ContactFormSubmissionViewSet(CreateModelMixin, GenericViewSet):
         )
 
 
+@extend_schema(tags=["FAQ"])
 class FAQViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для FAQ"""
     queryset = FAQ.objects.filter(is_published=True)
     serializer_class = FAQSerializer
     pagination_class = None
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
+@extend_schema(tags=["Преимущества"])
 class AdvantageCardViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для карточек преимуществ"""
     queryset = AdvantageCard.objects.filter(is_published=True)
     serializer_class = AdvantageCardSerializer
     pagination_class = None
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)

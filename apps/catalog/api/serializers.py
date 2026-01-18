@@ -21,6 +21,7 @@ from apps.catalog.models import (
     Style,
     TypeCarpetCollection,
 )
+from .utils import get_language_from_request
 
 
 class ImageFieldSerializer(serializers.ImageField):
@@ -205,8 +206,7 @@ class NewsContentBlockSerializer(serializers.ModelSerializer):
             request = self.context.get("request")
             
             if request:
-                accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-                language = self._parse_language(accept_language)
+                language = get_language_from_request(request)
                 
                 data = []
                 for image in images:
@@ -221,19 +221,6 @@ class NewsContentBlockSerializer(serializers.ModelSerializer):
             
             return NewsImageSerializer(images, many=True, context=self.context).data
         return []
-    
-    def _parse_language(self, accept_language):
-        """Парсит Accept-Language заголовок и возвращает код языка"""
-        if not accept_language:
-            return "uz"
-        
-        languages = []
-        for lang in accept_language.split(","):
-            lang = lang.strip().split(";")[0].split("-")[0].split("_")[0].lower()
-            if lang in ["uz", "ru", "en"]:
-                languages.append(lang)
-        
-        return languages[0] if languages else "uz"
 
 
 class NewsListSerializer(serializers.ModelSerializer):
@@ -279,8 +266,7 @@ class NewsDetailSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         
         if request:
-            accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-            language = self._parse_language(accept_language)
+            language = get_language_from_request(request)
             
             data = []
             for block in blocks:
@@ -311,19 +297,6 @@ class NewsDetailSerializer(serializers.ModelSerializer):
             return data
         
         return NewsContentBlockSerializer(blocks, many=True, context=self.context).data
-    
-    def _parse_language(self, accept_language):
-        """Парсит Accept-Language заголовок и возвращает код языка"""
-        if not accept_language:
-            return "uz"
-        
-        languages = []
-        for lang in accept_language.split(","):
-            lang = lang.strip().split(";")[0].split("-")[0].split("_")[0].lower()
-            if lang in ["uz", "ru", "en"]:
-                languages.append(lang)
-        
-        return languages[0] if languages else "uz"
 
 
 class GallerySerializer(serializers.ModelSerializer):
@@ -346,12 +319,14 @@ class GallerySerializer(serializers.ModelSerializer):
 class HomePageSerializer(serializers.ModelSerializer):
     """Сериализатор для главной страницы с поддержкой мультиязычности"""
     image = ImageFieldSerializer(required=False, allow_null=True)
-
+    video = serializers.FileField(required=False, allow_null=True)
+    
     class Meta:
         model = HomePage
         fields = [
             "id",
             "image",
+            "video",
             "title",
             "description",
             "collection_link",
@@ -361,14 +336,13 @@ class HomePageSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
     def to_representation(self, instance):
-        """Возвращает данные на языке из Accept-Language заголовка"""
+        """Возвращает данные на языке из query параметра lang"""
         representation = super().to_representation(instance)
         request = self.context.get("request")
         
         if request:
-            # Получаем язык из заголовка Accept-Language
-            accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-            language = self._parse_language(accept_language)
+            # Получаем язык из query параметра
+            language = get_language_from_request(request)
             
             # Получаем переведенные поля
             if language and language != "uz":  # uz - язык по умолчанию
@@ -379,22 +353,6 @@ class HomePageSerializer(serializers.ModelSerializer):
                 representation["showroom_link"] = getattr(instance, f"showroom_link_{language}", instance.showroom_link)
         
         return representation
-
-    def _parse_language(self, accept_language):
-        """Парсит Accept-Language заголовок и возвращает код языка"""
-        if not accept_language:
-            return "uz"  # По умолчанию узбекский
-        
-        # Парсим заголовок (например: "uz,ru;q=0.9,en;q=0.8" или "ru-RU,ru;q=0.9,en-US;q=0.8")
-        languages = []
-        for lang in accept_language.split(","):
-            # Берем только код языка (до дефиса или точки с запятой)
-            lang = lang.strip().split(";")[0].split("-")[0].split("_")[0].lower()
-            if lang in ["uz", "ru", "en"]:
-                languages.append(lang)
-        
-        # Возвращаем первый поддерживаемый язык или uz по умолчанию
-        return languages[0] if languages else "uz"
 
 
 class DealerAdvantageSerializer(serializers.ModelSerializer):
@@ -439,8 +397,7 @@ class AboutPageSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         
         if request:
-            accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-            language = self._parse_language(accept_language)
+            language = get_language_from_request(request)
             
             data = []
             for advantage in advantages:
@@ -456,14 +413,13 @@ class AboutPageSerializer(serializers.ModelSerializer):
         return DealerAdvantageSerializer(advantages, many=True).data
 
     def to_representation(self, instance):
-        """Возвращает данные на языке из Accept-Language заголовка"""
+        """Возвращает данные на языке из query параметра lang"""
         representation = super().to_representation(instance)
         request = self.context.get("request")
         
         if request:
-            # Получаем язык из заголовка Accept-Language
-            accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-            language = self._parse_language(accept_language)
+            # Получаем язык из query параметра
+            language = get_language_from_request(request)
             
             # Получаем переведенные поля для основной информации
             if language and language != "uz":  # uz - язык по умолчанию
@@ -489,19 +445,6 @@ class AboutPageSerializer(serializers.ModelSerializer):
             # dealer_advantages обрабатывается через get_dealer_advantages()
         
         return representation
-
-    def _parse_language(self, accept_language):
-        """Парсит Accept-Language заголовок и возвращает код языка"""
-        if not accept_language:
-            return "uz"
-        
-        languages = []
-        for lang in accept_language.split(","):
-            lang = lang.strip().split(";")[0].split("-")[0].split("_")[0].lower()
-            if lang in ["uz", "ru", "en"]:
-                languages.append(lang)
-        
-        return languages[0] if languages else "uz"
 
     def _translate_json_list(self, json_data, language, translatable_fields):
         """Переводит поля в JSON списке на нужный язык"""
@@ -551,13 +494,12 @@ class ContactPageSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
     
     def to_representation(self, instance):
-        """Возвращает данные на языке из Accept-Language заголовка"""
+        """Возвращает данные на языке из query параметра lang"""
         representation = super().to_representation(instance)
         request = self.context.get("request")
         
         if request:
-            accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-            language = self._parse_language(accept_language)
+            language = get_language_from_request(request)
             
             if language and language != "uz":
                 representation["page_title"] = getattr(instance, f"page_title_{language}", instance.page_title)
@@ -569,19 +511,6 @@ class ContactPageSerializer(serializers.ModelSerializer):
                 representation["form_description"] = getattr(instance, f"form_description_{language}", instance.form_description)
         
         return representation
-    
-    def _parse_language(self, accept_language):
-        """Парсит Accept-Language заголовок и возвращает код языка"""
-        if not accept_language:
-            return "uz"
-        
-        languages = []
-        for lang in accept_language.split(","):
-            lang = lang.strip().split(";")[0].split("-")[0].split("_")[0].lower()
-            if lang in ["uz", "ru", "en"]:
-                languages.append(lang)
-        
-        return languages[0] if languages else "uz"
 
 
 class SalesPointSerializer(serializers.ModelSerializer):
@@ -622,8 +551,7 @@ class RegionSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         
         if request:
-            accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-            language = self._parse_language(accept_language)
+            language = get_language_from_request(request)
             
             data = []
             for point in points:
@@ -642,27 +570,13 @@ class RegionSerializer(serializers.ModelSerializer):
         
         return SalesPointSerializer(points, many=True).data
     
-    def _parse_language(self, accept_language):
-        """Парсит Accept-Language заголовок и возвращает код языка"""
-        if not accept_language:
-            return "uz"
-        
-        languages = []
-        for lang in accept_language.split(","):
-            lang = lang.strip().split(";")[0].split("-")[0].split("_")[0].lower()
-            if lang in ["uz", "ru", "en"]:
-                languages.append(lang)
-        
-        return languages[0] if languages else "uz"
-    
     def to_representation(self, instance):
-        """Возвращает данные на языке из Accept-Language заголовка"""
+        """Возвращает данные на языке из query параметра lang"""
         representation = super().to_representation(instance)
         request = self.context.get("request")
         
         if request:
-            accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-            language = self._parse_language(accept_language)
+            language = get_language_from_request(request)
             
             if language and language != "uz":
                 representation["name"] = getattr(instance, f"name_{language}", instance.name)
@@ -692,32 +606,18 @@ class FAQSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
     
     def to_representation(self, instance):
-        """Возвращает данные на языке из Accept-Language заголовка"""
+        """Возвращает данные на языке из query параметра lang"""
         representation = super().to_representation(instance)
         request = self.context.get("request")
         
         if request:
-            accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-            language = self._parse_language(accept_language)
+            language = get_language_from_request(request)
             
             if language and language != "uz":
                 representation["question"] = getattr(instance, f"question_{language}", instance.question)
                 representation["answer"] = getattr(instance, f"answer_{language}", instance.answer)
         
         return representation
-    
-    def _parse_language(self, accept_language):
-        """Парсит Accept-Language заголовок и возвращает код языка"""
-        if not accept_language:
-            return "uz"
-        
-        languages = []
-        for lang in accept_language.split(","):
-            lang = lang.strip().split(";")[0].split("-")[0].split("_")[0].lower()
-            if lang in ["uz", "ru", "en"]:
-                languages.append(lang)
-        
-        return languages[0] if languages else "uz"
 
 
 class AdvantageCardSerializer(serializers.ModelSerializer):
@@ -729,29 +629,15 @@ class AdvantageCardSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
     
     def to_representation(self, instance):
-        """Возвращает данные на языке из Accept-Language заголовка"""
+        """Возвращает данные на языке из query параметра lang"""
         representation = super().to_representation(instance)
         request = self.context.get("request")
         
         if request:
-            accept_language = request.META.get("HTTP_ACCEPT_LANGUAGE", "")
-            language = self._parse_language(accept_language)
+            language = get_language_from_request(request)
             
             if language and language != "uz":
                 representation["title"] = getattr(instance, f"title_{language}", instance.title)
                 representation["description"] = getattr(instance, f"description_{language}", instance.description)
         
         return representation
-    
-    def _parse_language(self, accept_language):
-        """Парсит Accept-Language заголовок и возвращает код языка"""
-        if not accept_language:
-            return "uz"
-        
-        languages = []
-        for lang in accept_language.split(","):
-            lang = lang.strip().split(";")[0].split("-")[0].split("_")[0].lower()
-            if lang in ["uz", "ru", "en"]:
-                languages.append(lang)
-        
-        return languages[0] if languages else "uz"

@@ -385,7 +385,7 @@ class HomePageAdmin(admin.ModelAdmin):
             "fields": ("title", "title_ru", "title_en", "description", "description_ru", "description_en")
         }),
         ("Изображение", {
-            "fields": ("image", "image_preview")
+            "fields": ("image", "video", "image_preview")
         }),
         ("Ссылки", {
             "fields": (
