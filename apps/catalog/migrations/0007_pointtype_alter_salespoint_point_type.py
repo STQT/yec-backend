@@ -43,7 +43,7 @@ def create_point_types_and_migrate_data(apps, schema_editor):
 
 
 def reverse_migration(apps, schema_editor):
-g    """Обратная миграция - удалить созданные типы точек"""
+    """Обратная миграция - удалить созданные типы точек"""
     # При откате миграции Django автоматически восстановит старое поле point_type
     # Данные будут потеряны, что нормально для такого типа миграции
     PointType = apps.get_model('catalog', 'PointType')
