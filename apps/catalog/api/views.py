@@ -23,6 +23,7 @@ from apps.catalog.models import (
     Gallery,
     HomePage,
     News,
+    PointType,
     Region,
     Room,
     Style,
@@ -44,6 +45,7 @@ from .serializers import (
     HomePageSerializer,
     NewsDetailSerializer,
     NewsListSerializer,
+    PointTypeSerializer,
     RegionSerializer,
     RoomSerializer,
     StyleSerializer,
@@ -229,6 +231,18 @@ class ColorViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для цветов"""
     queryset = Color.objects.all()
     serializer_class = ColorSerializer
+    pagination_class = None
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+
+@extend_schema(tags=["Типы точек"])
+class PointTypeViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для типов точек"""
+    queryset = PointType.objects.filter(is_published=True)
+    serializer_class = PointTypeSerializer
     pagination_class = None
     
     @extend_schema(parameters=[LANG_PARAMETER])

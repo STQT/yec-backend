@@ -15,6 +15,7 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
+    PointType,
     Region,
     Room,
     SalesPoint,
@@ -43,6 +44,20 @@ class TypeCarpetCollectionSerializer(serializers.ModelSerializer):
         model = TypeCarpetCollection
         fields = ["id", "type", "slug", "description", "image"]
         read_only_fields = ["id", "slug"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            if language and language != "uz":
+                representation["type"] = getattr(instance, f"type_{language}", instance.type)
+                representation["description"] = getattr(instance, f"description_{language}", instance.description)
+        
+        return representation
 
 
 class StyleSerializer(serializers.ModelSerializer):
@@ -52,6 +67,19 @@ class StyleSerializer(serializers.ModelSerializer):
         model = Style
         fields = ["id", "name", "slug"]
         read_only_fields = ["id", "slug"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            if language and language != "uz":
+                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+        
+        return representation
 
 
 class RoomSerializer(serializers.ModelSerializer):
@@ -61,6 +89,19 @@ class RoomSerializer(serializers.ModelSerializer):
         model = Room
         fields = ["id", "name", "slug"]
         read_only_fields = ["id", "slug"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            if language and language != "uz":
+                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+        
+        return representation
 
 
 class ColorSerializer(serializers.ModelSerializer):
@@ -70,6 +111,41 @@ class ColorSerializer(serializers.ModelSerializer):
         model = Color
         fields = ["id", "name", "slug", "hex_code"]
         read_only_fields = ["id", "slug"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            if language and language != "uz":
+                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+        
+        return representation
+
+
+class PointTypeSerializer(serializers.ModelSerializer):
+    """Сериализатор для типов точек"""
+
+    class Meta:
+        model = PointType
+        fields = ["id", "name", "slug"]
+        read_only_fields = ["id", "slug"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            if language and language != "uz":
+                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+        
+        return representation
 
 
 class CollectionListSerializer(serializers.ModelSerializer):
@@ -143,6 +219,19 @@ class CarpetListSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "watched", "created_at"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request and instance.type:
+            language = get_language_from_request(request)
+            
+            if language and language != "uz":
+                representation["type_name"] = getattr(instance.type, f"type_{language}", instance.type.type)
+        
+        return representation
 
 
 class CarpetDetailSerializer(serializers.ModelSerializer):
@@ -516,6 +605,7 @@ class ContactPageSerializer(serializers.ModelSerializer):
 
 class SalesPointSerializer(serializers.ModelSerializer):
     """Сериализатор для торговой точки"""
+    point_type = PointTypeSerializer(read_only=True)
     
     class Meta:
         model = SalesPoint
@@ -530,6 +620,21 @@ class SalesPointSerializer(serializers.ModelSerializer):
             "order",
         ]
         read_only_fields = ["id"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            if language and language != "uz":
+                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+                representation["address"] = getattr(instance, f"address_{language}", instance.address)
+                representation["location"] = getattr(instance, f"location_{language}", instance.location)
+        
+        return representation
 
 
 class RegionSerializer(serializers.ModelSerializer):
@@ -556,10 +661,19 @@ class RegionSerializer(serializers.ModelSerializer):
             
             data = []
             for point in points:
+                point_type_data = None
+                if point.point_type:
+                    point_type_name = getattr(point.point_type, f"name_{language}", point.point_type.name) if language != "uz" else point.point_type.name
+                    point_type_data = {
+                        "id": point.point_type.id,
+                        "name": point_type_name,
+                        "slug": point.point_type.slug,
+                    }
+                
                 item = {
                     "id": point.id,
                     "name": getattr(point, f"name_{language}", point.name) if language != "uz" else point.name,
-                    "point_type": point.point_type,
+                    "point_type": point_type_data,
                     "address": getattr(point, f"address_{language}", point.address) if language != "uz" else point.address,
                     "location": getattr(point, f"location_{language}", point.location) if language != "uz" else point.location,
                     "phone": point.phone,
@@ -569,7 +683,7 @@ class RegionSerializer(serializers.ModelSerializer):
                 data.append(item)
             return data
         
-        return SalesPointSerializer(points, many=True).data
+        return SalesPointSerializer(points, many=True, context={"request": request}).data
     
     def to_representation(self, instance):
         """Возвращает данные на языке из query параметра lang"""
@@ -590,7 +704,7 @@ class ContactFormSubmissionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ContactFormSubmission
-        fields = ["name", "phone", "message"]
+        fields = ["name", "phone", "email", "message"]
     
     def create(self, validated_data):
         """Создать новую заявку со статусом 'new'"""

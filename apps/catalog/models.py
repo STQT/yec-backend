@@ -457,15 +457,24 @@ class Region(models.Model):
         ordering = ['order', 'name']
 
 
+class PointType(models.Model):
+    """Модель типа торговой точки"""
+    name = models.CharField(max_length=200, verbose_name='Название типа')
+    slug = models.SlugField(unique=True, verbose_name='Slug')
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = 'Тип точки'
+        verbose_name_plural = 'Типы точек'
+        ordering = ['order', 'name']
+
+
 class SalesPoint(models.Model):
     """Модель торговой точки"""
-    POINT_TYPE_CHOICES = [
-        ('olmazor', 'Olmazor (Jomiy bozori)'),
-        ('chilonzor', "Chilonzor (Bekto'pi bozori)"),
-        ('bektemir', "Bektemir (Qo'yliq bozori)"),
-        ('other', 'Boshqa'),
-    ]
-    
     region = models.ForeignKey(
         Region,
         on_delete=models.CASCADE,
@@ -475,10 +484,12 @@ class SalesPoint(models.Model):
     
     # Основная информация
     name = models.CharField(max_length=200, verbose_name='Название точки')
-    point_type = models.CharField(
-        max_length=20,
-        choices=POINT_TYPE_CHOICES,
-        default='other',
+    point_type = models.ForeignKey(
+        PointType,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sales_points',
         verbose_name='Тип точки'
     )
     
@@ -497,6 +508,7 @@ class SalesPoint(models.Model):
     
     # Ссылка на карту
     map_link = models.URLField(
+        max_length=500,
         blank=True,
         null=True,
         verbose_name='Ссылка на карту',
@@ -529,7 +541,8 @@ class ContactFormSubmission(models.Model):
     
     name = models.CharField(max_length=200, verbose_name='Имя')
     phone = models.CharField(max_length=50, verbose_name='Телефон')
-    message = models.TextField(verbose_name='Сообщение')
+    email = models.EmailField(verbose_name='Email', blank=True, null=True)
+    message = models.TextField(verbose_name='Сообщение', blank=True, null=True)
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,

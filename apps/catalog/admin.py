@@ -17,6 +17,7 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
+    PointType,
     Region,
     Room,
     SalesPoint,
@@ -147,6 +148,36 @@ class ColorAdmin(admin.ModelAdmin):
         """Количество ковров с цветом"""
         return obj.carpets.count()
     carpets_count.short_description = "Количество ковров"
+
+
+@admin.register(PointType)
+class PointTypeAdmin(admin.ModelAdmin):
+    """Админка для типов точек"""
+    list_display = ["name", "slug", "order", "is_published", "sales_points_count"]
+    list_display_links = ["name"]
+    list_filter = ["is_published"]
+    search_fields = ["name"]
+    prepopulated_fields = {"slug": ("name",)}
+    list_editable = ["order", "is_published"]
+    readonly_fields = ["sales_points_count"]
+    
+    def sales_points_count(self, obj):
+        """Количество торговых точек с типом"""
+        return obj.sales_points.count()
+    sales_points_count.short_description = "Количество точек"
+    
+    fieldsets = (
+        ("Название типа точки", {
+            "fields": (
+                "name",
+                "name_ru",
+                "name_en",
+                "slug",
+                "order",
+                "is_published"
+            )
+        }),
+    )
 
 
 class CarpetImageInline(admin.StackedInline):
@@ -719,7 +750,11 @@ class SalesPointInline(admin.StackedInline):
         "name_en",
         "point_type",
         "address",
+        "address_ru",
+        "address_en",
         "location",
+        "location_ru",
+        "location_en",
         "phone",
         "map_link",
         "order",
@@ -766,17 +801,17 @@ class RegionAdmin(admin.ModelAdmin):
 @admin.register(ContactFormSubmission)
 class ContactFormSubmissionAdmin(admin.ModelAdmin):
     """Админка для заявок"""
-    list_display = ["name", "phone", "status", "created_at"]
+    list_display = ["name", "phone", "email", "status", "created_at"]
     list_display_links = ["name"]
     list_filter = ["status", "created_at"]
-    search_fields = ["name", "phone", "message"]
+    search_fields = ["name", "phone", "email", "message"]
     readonly_fields = ["created_at", "updated_at"]
     list_editable = ["status"]
     date_hierarchy = "created_at"
     
     fieldsets = (
         ("Информация от клиента", {
-            "fields": ("name", "phone", "message")
+            "fields": ("name", "phone", "email", "message")
         }),
         ("Обработка", {
             "fields": ("status", "notes")

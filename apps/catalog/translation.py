@@ -2,6 +2,7 @@ from modeltranslation.translator import register, TranslationOptions
 from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
+    Color,
     ContactPage,
     DealerAdvantage,
     FAQ,
@@ -9,8 +10,12 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
+    PointType,
     Region,
+    Room,
     SalesPoint,
+    Style,
+    TypeCarpetCollection,
 )
 
 
@@ -107,4 +112,39 @@ class FAQTranslationOptions(TranslationOptions):
 class AdvantageCardTranslationOptions(TranslationOptions):
     """Настройки переводов для карточек преимуществ"""
     fields = ('title', 'description')
+    required_languages = ('uz',)
+
+
+@register(TypeCarpetCollection)
+class TypeCarpetCollectionTranslationOptions(TranslationOptions):
+    """Настройки переводов для типов ковров"""
+    fields = ('type', 'description')
+    required_languages = ('uz',)
+
+
+@register(Room)
+class RoomTranslationOptions(TranslationOptions):
+    """Настройки переводов для комнат"""
+    fields = ('name',)
+    required_languages = ('uz',)
+
+
+@register(Style)
+class StyleTranslationOptions(TranslationOptions):
+    """Настройки переводов для стилей"""
+    fields = ('name',)
+    required_languages = ('uz',)
+
+
+@register(Color)
+class ColorTranslationOptions(TranslationOptions):
+    """Настройки переводов для цветов"""
+    fields = ('name',)
+    required_languages = ('uz',)
+
+
+@register(PointType)
+class PointTypeTranslationOptions(TranslationOptions):
+    """Настройки переводов для типов точек"""
+    fields = ('name',)
     required_languages = ('uz',)
