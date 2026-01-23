@@ -4,6 +4,52 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+def create_point_types_and_migrate_data(apps, schema_editor):
+    """Создать типы точек и мигрировать данные"""
+    PointType = apps.get_model('catalog', 'PointType')
+    SalesPoint = apps.get_model('catalog', 'SalesPoint')
+    
+    # Маппинг старых значений на новые названия
+    type_mapping = {
+        'olmazor': {'name': 'Olmazor (Jomiy bozori)', 'slug': 'olmazor', 'order': 1},
+        'chilonzor': {'name': "Chilonzor (Bekto'pi bozori)", 'slug': 'chilonzor', 'order': 2},
+        'bektemir': {'name': "Bektemir (Qo'yliq bozori)", 'slug': 'bektemir', 'order': 3},
+        'other': {'name': 'Boshqa', 'slug': 'other', 'order': 4},
+    }
+    
+    # Создаем типы точек
+    point_types = {}
+    for old_value, data in type_mapping.items():
+        # Проверяем, существует ли уже такой тип
+        try:
+            point_type = PointType.objects.get(slug=data['slug'])
+        except PointType.DoesNotExist:
+            point_type = PointType.objects.create(
+                name=data['name'],
+                slug=data['slug'],
+                order=data['order'],
+                is_published=True,
+            )
+        point_types[old_value] = point_type
+    
+    # Обновляем торговые точки
+    for sales_point in SalesPoint.objects.all():
+        # Читаем старое значение из CharField point_type
+        old_value = getattr(sales_point, 'point_type', None)
+        if old_value and old_value in point_types:
+            # Записываем в новое поле point_type_new (ForeignKey)
+            sales_point.point_type_new_id = point_types[old_value].id
+            sales_point.save(update_fields=['point_type_new_id'])
+
+
+def reverse_migration(apps, schema_editor):
+g    """Обратная миграция - удалить созданные типы точек"""
+    # При откате миграции Django автоматически восстановит старое поле point_type
+    # Данные будут потеряны, что нормально для такого типа миграции
+    PointType = apps.get_model('catalog', 'PointType')
+    PointType.objects.all().delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,6 +57,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Шаг 1: Создать модель PointType
         migrations.CreateModel(
             name='PointType',
             fields=[
@@ -29,6 +76,26 @@ class Migration(migrations.Migration):
                 'ordering': ['order', 'name'],
             },
         ),
+        # Шаг 2: Добавить новое поле point_type_new как ForeignKey (временно)
+        migrations.AddField(
+            model_name='salespoint',
+            name='point_type_new',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sales_points_new', to='catalog.pointtype', verbose_name='Тип точки (новый)'),
+        ),
+        # Шаг 3: Мигрировать данные
+        migrations.RunPython(create_point_types_and_migrate_data, reverse_migration),
+        # Шаг 4: Удалить старое поле point_type
+        migrations.RemoveField(
+            model_name='salespoint',
+            name='point_type',
+        ),
+        # Шаг 5: Переименовать point_type_new в point_type
+        migrations.RenameField(
+            model_name='salespoint',
+            old_name='point_type_new',
+            new_name='point_type',
+        ),
+        # Шаг 6: Обновить related_name
         migrations.AlterField(
             model_name='salespoint',
             name='point_type',
