@@ -199,11 +199,11 @@ class CarpetListSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         request = self.context.get("request")
         
-        if request and instance.type:
+        if request:
             language = get_language_from_request(request)
             
             if language and language != "uz":
-                representation["type_name"] = getattr(instance.type, f"type_{language}", instance.type.type)
+                representation["material"] = getattr(instance, f"material_{language}", instance.material)
         
         return representation
 
@@ -241,6 +241,24 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
             "update_at",
         ]
         read_only_fields = ["id", "watched", "created_at", "update_at"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            if language and language != "uz":
+                representation["material"] = getattr(instance, f"material_{language}", instance.material)
+                representation["density"] = getattr(instance, f"density_{language}", instance.density)
+                representation["base"] = getattr(instance, f"base_{language}", instance.base)
+                representation["pile_height"] = getattr(instance, f"pile_height_{language}", instance.pile_height)
+                representation["yarn_composition"] = getattr(instance, f"yarn_composition_{language}", instance.yarn_composition)
+                representation["weight"] = getattr(instance, f"weight_{language}", instance.weight)
+        
+        return representation
 
 
 class NewsImageSerializer(serializers.ModelSerializer):

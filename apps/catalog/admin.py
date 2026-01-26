@@ -206,12 +206,24 @@ class CarpetAdmin(admin.ModelAdmin):
         }),
         ("Характеристики", {
             "fields": (
-                "material",
-                "density",
-                "base",
-                "pile_height",
-                "yarn_composition",
-                "weight"
+                "material_uz",
+                "material_ru",
+                "material_en",
+                "density_uz",
+                "density_ru",
+                "density_en",
+                "base_uz",
+                "base_ru",
+                "base_en",
+                "pile_height_uz",
+                "pile_height_ru",
+                "pile_height_en",
+                "yarn_composition_uz",
+                "yarn_composition_ru",
+                "yarn_composition_en",
+                "weight_uz",
+                "weight_ru",
+                "weight_en"
             )
         }),
         ("Фильтры", {
