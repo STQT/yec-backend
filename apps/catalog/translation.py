@@ -82,7 +82,7 @@ class NewsTranslationOptions(TranslationOptions):
 @register(NewsContentBlock)
 class NewsContentBlockTranslationOptions(TranslationOptions):
     """Настройки переводов для блоков контента новостей"""
-    fields = ('text_content',)
+    fields = ('title', 'text_content')
     required_languages = ('uz',)
 
 

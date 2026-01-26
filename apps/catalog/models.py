@@ -258,6 +258,12 @@ class NewsContentBlock(models.Model):
         default='text',
         verbose_name='Тип блока'
     )
+    title = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Заголовок блока',
+        help_text='Опциональный заголовок для блока контента'
+    )
     text_content = models.TextField(
         blank=True,
         null=True,

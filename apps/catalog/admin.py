@@ -266,6 +266,9 @@ class NewsContentBlockInline(admin.StackedInline):
     fields = [
         "content_type",
         "order",
+        "title_uz",
+        "title_ru",
+        "title_en",
         "text_content_uz",
         "text_content_ru",
         "text_content_en",

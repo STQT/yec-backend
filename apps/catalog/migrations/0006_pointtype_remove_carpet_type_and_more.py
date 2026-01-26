@@ -4,6 +4,71 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+def create_pointtype_if_not_exists(apps, schema_editor):
+    """Создать таблицу PointType только если она не существует"""
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'catalog_pointtype'
+            );
+        """)
+        exists = cursor.fetchone()[0]
+        
+        if not exists:
+            # Создаем таблицу вручную через SQL
+            cursor.execute("""
+                CREATE TABLE catalog_pointtype (
+                    id BIGSERIAL PRIMARY KEY,
+                    name VARCHAR(200) NOT NULL,
+                    name_uz VARCHAR(200),
+                    name_ru VARCHAR(200),
+                    name_en VARCHAR(200),
+                    slug VARCHAR(50) UNIQUE NOT NULL,
+                    "order" INTEGER NOT NULL DEFAULT 0,
+                    is_published BOOLEAN NOT NULL DEFAULT TRUE
+                );
+            """)
+
+
+def reverse_create_pointtype(apps, schema_editor):
+    """Удалить таблицу PointType при откате миграции"""
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute("DROP TABLE IF EXISTS catalog_pointtype CASCADE;")
+
+
+def safe_remove_field(apps, schema_editor, table_name, column_name):
+    """Безопасно удалить колонку, если она существует"""
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.columns 
+                WHERE table_schema = 'public' 
+                AND table_name = %s
+                AND column_name = %s
+            );
+        """, [table_name, column_name])
+        exists = cursor.fetchone()[0]
+        
+        if exists:
+            cursor.execute(f'ALTER TABLE {table_name} DROP COLUMN IF EXISTS {column_name} CASCADE;')
+
+
+def remove_fields_safely(apps, schema_editor):
+    """Безопасно удалить все поля, которые могут уже не существовать"""
+    safe_remove_field(apps, schema_editor, 'catalog_carpet', 'type_id')
+    safe_remove_field(apps, schema_editor, 'catalog_aboutpage', 'company_history')
+    safe_remove_field(apps, schema_editor, 'catalog_aboutpage', 'production_capacity')
+    safe_remove_field(apps, schema_editor, 'catalog_aboutpage', 'production_steps')
+    safe_remove_field(apps, schema_editor, 'catalog_gallery', 'description')
+
+
+def reverse_remove_fields(apps, schema_editor):
+    """Обратная операция - ничего не делаем, так как поля уже удалены"""
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,43 +76,63 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='PointType',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200, verbose_name='Название типа')),
-                ('name_uz', models.CharField(max_length=200, null=True, verbose_name='Название типа')),
-                ('name_ru', models.CharField(max_length=200, null=True, verbose_name='Название типа')),
-                ('name_en', models.CharField(max_length=200, null=True, verbose_name='Название типа')),
-                ('slug', models.SlugField(unique=True, verbose_name='Slug')),
-                ('order', models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')),
-                ('is_published', models.BooleanField(default=True, verbose_name='Публикация')),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(
+                    create_pointtype_if_not_exists,
+                    reverse_create_pointtype,
+                ),
             ],
-            options={
-                'verbose_name': 'Тип точки',
-                'verbose_name_plural': 'Типы точек',
-                'ordering': ['order', 'name'],
-            },
+            state_operations=[
+                migrations.CreateModel(
+                    name='PointType',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('name', models.CharField(max_length=200, verbose_name='Название типа')),
+                        ('name_uz', models.CharField(max_length=200, null=True, verbose_name='Название типа')),
+                        ('name_ru', models.CharField(max_length=200, null=True, verbose_name='Название типа')),
+                        ('name_en', models.CharField(max_length=200, null=True, verbose_name='Название типа')),
+                        ('slug', models.SlugField(unique=True, verbose_name='Slug')),
+                        ('order', models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')),
+                        ('is_published', models.BooleanField(default=True, verbose_name='Публикация')),
+                    ],
+                    options={
+                        'verbose_name': 'Тип точки',
+                        'verbose_name_plural': 'Типы точек',
+                        'ordering': ['order', 'name'],
+                    },
+                ),
+            ],
         ),
-        migrations.RemoveField(
-            model_name='carpet',
-            name='type',
-        ),
-        migrations.RemoveField(
-            model_name='aboutpage',
-            name='company_history',
-        ),
-        migrations.RemoveField(
-            model_name='aboutpage',
-            name='production_capacity',
-        ),
-        migrations.RemoveField(
-            model_name='aboutpage',
-            name='production_steps',
-        ),
-        migrations.RemoveField(
-            model_name='gallery',
-            name='description',
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(
+                    remove_fields_safely,
+                    reverse_remove_fields,
+                ),
+            ],
+            state_operations=[
+                migrations.RemoveField(
+                    model_name='carpet',
+                    name='type',
+                ),
+                migrations.RemoveField(
+                    model_name='aboutpage',
+                    name='company_history',
+                ),
+                migrations.RemoveField(
+                    model_name='aboutpage',
+                    name='production_capacity',
+                ),
+                migrations.RemoveField(
+                    model_name='aboutpage',
+                    name='production_steps',
+                ),
+                migrations.RemoveField(
+                    model_name='gallery',
+                    name='description',
+                ),
+            ],
         ),
         migrations.AddField(
             model_name='color',

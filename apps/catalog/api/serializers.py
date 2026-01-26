@@ -259,7 +259,7 @@ class NewsContentBlockSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = NewsContentBlock
-        fields = ["id", "content_type", "text_content", "images", "order"]
+        fields = ["id", "content_type", "title", "text_content", "images", "order"]
         read_only_fields = ["id"]
     
     def get_images(self, obj):
@@ -284,6 +284,20 @@ class NewsContentBlockSerializer(serializers.ModelSerializer):
             
             return NewsImageSerializer(images, many=True, context=self.context).data
         return []
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            if language and language != "uz":
+                representation["title"] = getattr(instance, f"title_{language}", instance.title)
+                representation["text_content"] = getattr(instance, f"text_content_{language}", instance.text_content)
+        
+        return representation
 
 
 class NewsListSerializer(serializers.ModelSerializer):
