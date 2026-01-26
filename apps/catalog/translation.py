@@ -18,7 +18,6 @@ from apps.catalog.models import (
     Room,
     SalesPoint,
     Style,
-    TypeCarpetCollection,
 )
 
 
@@ -134,13 +133,6 @@ class FAQTranslationOptions(TranslationOptions):
 class AdvantageCardTranslationOptions(TranslationOptions):
     """Настройки переводов для карточек преимуществ"""
     fields = ('title', 'description')
-    required_languages = ('uz',)
-
-
-@register(TypeCarpetCollection)
-class TypeCarpetCollectionTranslationOptions(TranslationOptions):
-    """Настройки переводов для типов ковров"""
-    fields = ('type', 'description')
     required_languages = ('uz',)
 
 

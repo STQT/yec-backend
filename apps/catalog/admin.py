@@ -18,12 +18,9 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
-<<<<<<< HEAD
     PointType,
-=======
     ProductionCapacity,
     ProductionStep,
->>>>>>> 4384df3 (fix lang)
     Region,
     Room,
     SalesPoint,
@@ -146,7 +143,7 @@ class PointTypeAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Название типа точки", {
             "fields": (
-                "name",
+                "name_uz",
                 "name_ru",
                 "name_en",
                 "slug",
@@ -703,17 +700,10 @@ class SalesPointInline(admin.StackedInline):
         "name_ru",
         "name_en",
         "point_type",
-<<<<<<< HEAD
-        "address",
-        "address_ru",
-        "address_en",
-        "location",
-=======
         "address_uz",
         "address_ru",
         "address_en",
         "location_uz",
->>>>>>> 4384df3 (fix lang)
         "location_ru",
         "location_en",
         "phone",

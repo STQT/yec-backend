@@ -16,12 +16,9 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
-<<<<<<< HEAD
     PointType,
-=======
     ProductionCapacity,
     ProductionStep,
->>>>>>> 4384df3 (fix lang)
     Region,
     Room,
     SalesPoint,
@@ -41,33 +38,6 @@ class ImageFieldSerializer(serializers.ImageField):
         return value.url
 
 
-<<<<<<< HEAD
-class TypeCarpetCollectionSerializer(serializers.ModelSerializer):
-    """Сериализатор для типов ковров"""
-    image = ImageFieldSerializer(required=False, allow_null=True)
-
-    class Meta:
-        model = TypeCarpetCollection
-        fields = ["id", "type", "slug", "description", "image"]
-        read_only_fields = ["id", "slug"]
-    
-    def to_representation(self, instance):
-        """Возвращает данные на языке из query параметра lang"""
-        representation = super().to_representation(instance)
-        request = self.context.get("request")
-        
-        if request:
-            language = get_language_from_request(request)
-            
-            if language and language != "uz":
-                representation["type"] = getattr(instance, f"type_{language}", instance.type)
-                representation["description"] = getattr(instance, f"description_{language}", instance.description)
-        
-        return representation
-
-
-=======
->>>>>>> 4384df3 (fix lang)
 class StyleSerializer(serializers.ModelSerializer):
     """Сериализатор для стилей"""
 
