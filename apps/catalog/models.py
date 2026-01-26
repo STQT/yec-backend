@@ -3,22 +3,90 @@ from django.urls import reverse
 import os
 
 
-# Модель для типов ковров
-class TypeCarpetCollection(models.Model):
-    type = models.CharField(max_length=32, verbose_name='Тип ковра')
-    slug = models.SlugField(unique=True, null=True, verbose_name='Slug')
-    description = models.TextField(default='Описания ковра', verbose_name='Описания', blank=True, null=True)
-    image = models.ImageField(upload_to='photos/typecarpet_avatar/%Y/%m/', verbose_name='photo тип ковров', blank=True)
-
+# Модель для этапов производства
+class ProductionStep(models.Model):
+    """Этап производства"""
+    about_page = models.ForeignKey(
+        'AboutPage',
+        on_delete=models.CASCADE,
+        related_name='production_steps',
+        verbose_name='Страница о компании'
+    )
+    title = models.CharField(max_length=200, verbose_name='Заголовок этапа')
+    description = models.TextField(verbose_name='Описание этапа')
+    image = models.ImageField(
+        upload_to='photos/production_steps/%Y/%m/',
+        verbose_name='Изображение этапа',
+        blank=True,
+        null=True
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    
     def __str__(self):
-        return self.type
-
+        return self.title
+    
     class Meta:
-        verbose_name = 'Тип ковра'
-        verbose_name_plural = 'Типы ковров'
+        verbose_name = 'Этап производства'
+        verbose_name_plural = 'Этапы производства'
+        ordering = ['order']
 
-    def get_absolute_url(self):
-        return reverse('catalog:typecarpet', kwargs={'typecarpet_slug': self.slug})
+
+# Модель для истории компании
+class CompanyHistory(models.Model):
+    """История компании"""
+    about_page = models.ForeignKey(
+        'AboutPage',
+        on_delete=models.CASCADE,
+        related_name='company_history',
+        verbose_name='Страница о компании'
+    )
+    year = models.PositiveIntegerField(verbose_name='Год')
+    title = models.CharField(max_length=200, verbose_name='Заголовок события')
+    description = models.TextField(verbose_name='Описание события')
+    image = models.ImageField(
+        upload_to='photos/company_history/%Y/%m/',
+        verbose_name='Изображение события',
+        blank=True,
+        null=True
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    
+    def __str__(self):
+        return f"{self.year} - {self.title}"
+    
+    class Meta:
+        verbose_name = 'История компании'
+        verbose_name_plural = 'История компании'
+        ordering = ['order', 'year']
+
+
+# Модель для объемов производства
+class ProductionCapacity(models.Model):
+    """Объем производства"""
+    about_page = models.ForeignKey(
+        'AboutPage',
+        on_delete=models.CASCADE,
+        related_name='production_capacity',
+        verbose_name='Страница о компании'
+    )
+    year = models.PositiveIntegerField(verbose_name='Год')
+    capacity = models.CharField(max_length=100, verbose_name='Объем производства')
+    description = models.TextField(verbose_name='Описание', blank=True)
+    image = models.ImageField(
+        upload_to='photos/production_capacity/%Y/%m/',
+        verbose_name='Изображение',
+        blank=True,
+        null=True
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    
+    def __str__(self):
+        return f"{self.year} - {self.capacity}"
+    
+    class Meta:
+        verbose_name = 'Объем производства'
+        verbose_name_plural = 'Объемы производства'
+        ordering = ['order', 'year']
 
 
 # Модель Collection
@@ -102,7 +170,6 @@ class Carpet(models.Model):
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, verbose_name='Коллекция',
                                    related_name='carpets')
-    type = models.ForeignKey(TypeCarpetCollection, on_delete=models.CASCADE, verbose_name='Тип ковра', null=True, blank=True)
     roll = models.BooleanField(default=False, verbose_name='Рулон')
     
     # Новые поля из Figma
@@ -320,36 +387,6 @@ class AboutPage(models.Model):
         max_length=100, 
         default="To'liq ekranda ko'rish",
         verbose_name='Текст кнопки шоурума'
-    )
-    
-    # Этапы производства (JSON)
-    # Формат: [{"order": 1, "title": "...", "title_ru": "...", "title_en": "...", 
-    #           "description": "...", "description_ru": "...", "description_en": "...", "image": "url"}]
-    production_steps = models.JSONField(
-        default=list,
-        blank=True,
-        verbose_name='Этапы производства',
-        help_text='Список этапов производства с переводами'
-    )
-    
-    # История компании (JSON)
-    # Формат: [{"year": 2005, "title": "...", "title_ru": "...", "title_en": "...",
-    #           "description": "...", "description_ru": "...", "description_en": "...", "image": "url"}]
-    company_history = models.JSONField(
-        default=list,
-        blank=True,
-        verbose_name='История компании',
-        help_text='Временная шкала истории компании с переводами'
-    )
-    
-    # Объемы производства (JSON)
-    # Формат: [{"year": 2005, "capacity": "1 000 000 mln. m²", "capacity_ru": "...", "capacity_en": "...",
-    #           "description": "...", "description_ru": "...", "description_en": "...", "image": "url"}]
-    production_capacity = models.JSONField(
-        default=list,
-        blank=True,
-        verbose_name='Объемы производства',
-        help_text='Объемы производства по годам с переводами'
     )
     
     is_published = models.BooleanField(default=True, verbose_name='Публикация')

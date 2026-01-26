@@ -6,6 +6,7 @@ from apps.catalog.models import (
     Carpet,
     Collection,
     Color,
+    CompanyHistory,
     ContactFormSubmission,
     ContactPage,
     DealerAdvantage,
@@ -15,12 +16,16 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
+<<<<<<< HEAD
     PointType,
+=======
+    ProductionCapacity,
+    ProductionStep,
+>>>>>>> 4384df3 (fix lang)
     Region,
     Room,
     SalesPoint,
     Style,
-    TypeCarpetCollection,
 )
 from .utils import get_language_from_request
 
@@ -36,6 +41,7 @@ class ImageFieldSerializer(serializers.ImageField):
         return value.url
 
 
+<<<<<<< HEAD
 class TypeCarpetCollectionSerializer(serializers.ModelSerializer):
     """Сериализатор для типов ковров"""
     image = ImageFieldSerializer(required=False, allow_null=True)
@@ -60,6 +66,8 @@ class TypeCarpetCollectionSerializer(serializers.ModelSerializer):
         return representation
 
 
+=======
+>>>>>>> 4384df3 (fix lang)
 class StyleSerializer(serializers.ModelSerializer):
     """Сериализатор для стилей"""
 
@@ -192,8 +200,6 @@ class CarpetListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка ковров"""
     collection_name = serializers.CharField(source="collection.name", read_only=True)
     collection_slug = serializers.CharField(source="collection.slug", read_only=True)
-    type_name = serializers.CharField(source="type.type", read_only=True)
-    type_slug = serializers.CharField(source="type.slug", read_only=True)
     styles = StyleSerializer(many=True, read_only=True)
     rooms = RoomSerializer(many=True, read_only=True)
     colors = ColorSerializer(many=True, read_only=True)
@@ -207,8 +213,6 @@ class CarpetListSerializer(serializers.ModelSerializer):
             "photo",
             "collection_name",
             "collection_slug",
-            "type_name",
-            "type_slug",
             "material",
             "is_new",
             "is_popular",
@@ -237,7 +241,6 @@ class CarpetListSerializer(serializers.ModelSerializer):
 class CarpetDetailSerializer(serializers.ModelSerializer):
     """Сериализатор для детальной информации о ковре"""
     collection = CollectionListSerializer(read_only=True)
-    type = TypeCarpetCollectionSerializer(read_only=True)
     styles = StyleSerializer(many=True, read_only=True)
     rooms = RoomSerializer(many=True, read_only=True)
     colors = ColorSerializer(many=True, read_only=True)
@@ -250,7 +253,6 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
             "code",
             "photo",
             "collection",
-            "type",
             "material",
             "density",
             "base",
@@ -445,6 +447,36 @@ class HomePageSerializer(serializers.ModelSerializer):
         return representation
 
 
+class ProductionStepSerializer(serializers.ModelSerializer):
+    """Сериализатор для этапов производства"""
+    image = ImageFieldSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = ProductionStep
+        fields = ["id", "title", "description", "image", "order"]
+        read_only_fields = ["id"]
+
+
+class CompanyHistorySerializer(serializers.ModelSerializer):
+    """Сериализатор для истории компании"""
+    image = ImageFieldSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = CompanyHistory
+        fields = ["id", "year", "title", "description", "image", "order"]
+        read_only_fields = ["id"]
+
+
+class ProductionCapacitySerializer(serializers.ModelSerializer):
+    """Сериализатор для объемов производства"""
+    image = ImageFieldSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = ProductionCapacity
+        fields = ["id", "year", "capacity", "description", "image", "order"]
+        read_only_fields = ["id"]
+
+
 class DealerAdvantageSerializer(serializers.ModelSerializer):
     """Сериализатор для преимуществ дилеров"""
 
@@ -458,6 +490,9 @@ class AboutPageSerializer(serializers.ModelSerializer):
     """Сериализатор для страницы о компании с поддержкой мультиязычности"""
     main_image = ImageFieldSerializer(required=False, allow_null=True)
     showroom_image = ImageFieldSerializer(required=False, allow_null=True)
+    production_steps = serializers.SerializerMethodField()
+    company_history = serializers.SerializerMethodField()
+    production_capacity = serializers.SerializerMethodField()
     dealer_advantages = serializers.SerializerMethodField()
 
     class Meta:
@@ -480,6 +515,74 @@ class AboutPageSerializer(serializers.ModelSerializer):
             "dealer_advantages",
         ]
         read_only_fields = ["id"]
+    
+    def get_production_steps(self, obj):
+        """Получить этапы производства с учетом языка"""
+        steps = obj.production_steps.all().order_by('order')
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            data = []
+            for step in steps:
+                item = {
+                    "id": step.id,
+                    "order": step.order,
+                    "title": getattr(step, f"title_{language}", step.title) if language != "uz" else step.title,
+                    "description": getattr(step, f"description_{language}", step.description) if language != "uz" else step.description,
+                    "image": request.build_absolute_uri(step.image.url) if step.image else None,
+                }
+                data.append(item)
+            return data
+        
+        return ProductionStepSerializer(steps, many=True, context=self.context).data
+    
+    def get_company_history(self, obj):
+        """Получить историю компании с учетом языка"""
+        history = obj.company_history.all().order_by('order', 'year')
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            data = []
+            for item in history:
+                history_item = {
+                    "id": item.id,
+                    "year": item.year,
+                    "order": item.order,
+                    "title": getattr(item, f"title_{language}", item.title) if language != "uz" else item.title,
+                    "description": getattr(item, f"description_{language}", item.description) if language != "uz" else item.description,
+                    "image": request.build_absolute_uri(item.image.url) if item.image else None,
+                }
+                data.append(history_item)
+            return data
+        
+        return CompanyHistorySerializer(history, many=True, context=self.context).data
+    
+    def get_production_capacity(self, obj):
+        """Получить объемы производства с учетом языка"""
+        capacity = obj.production_capacity.all().order_by('order', 'year')
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            data = []
+            for item in capacity:
+                capacity_item = {
+                    "id": item.id,
+                    "year": item.year,
+                    "order": item.order,
+                    "capacity": getattr(item, f"capacity_{language}", item.capacity) if language != "uz" else item.capacity,
+                    "description": getattr(item, f"description_{language}", item.description) if language != "uz" else item.description,
+                    "image": request.build_absolute_uri(item.image.url) if item.image else None,
+                }
+                data.append(capacity_item)
+            return data
+        
+        return ProductionCapacitySerializer(capacity, many=True, context=self.context).data
     
     def get_dealer_advantages(self, obj):
         """Получить преимущества дилеров с учетом языка"""

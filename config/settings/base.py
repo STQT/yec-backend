@@ -39,6 +39,8 @@ LANGUAGES = [
 MODELTRANSLATION_DEFAULT_LANGUAGE = 'uz'
 MODELTRANSLATION_LANGUAGES = ('uz', 'ru', 'en')
 MODELTRANSLATION_FALLBACK_LANGUAGES = ('uz', 'ru', 'en')
+MODELTRANSLATION_AUTO_POPULATE = False  # Отключаем автозаполнение из основного поля
+MODELTRANSLATION_PREPOPULATE_LANGUAGE = None  # Не заполнять автоматически языковые поля
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
 SITE_ID = 1
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-i18n

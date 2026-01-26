@@ -3,6 +3,7 @@ from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
     Color,
+    CompanyHistory,
     ContactPage,
     DealerAdvantage,
     FAQ,
@@ -11,6 +12,8 @@ from apps.catalog.models import (
     NewsContentBlock,
     NewsImage,
     PointType,
+    ProductionCapacity,
+    ProductionStep,
     Region,
     Room,
     SalesPoint,
@@ -40,8 +43,27 @@ class AboutPageTranslationOptions(TranslationOptions):
         'showroom_button_text',
     )
     required_languages = ('uz',)
-    # Примечание: JSON поля (production_steps, company_history, production_capacity)
-    # содержат переводы внутри себя в виде title_ru, title_en, description_ru, description_en и т.д.
+
+
+@register(ProductionStep)
+class ProductionStepTranslationOptions(TranslationOptions):
+    """Настройки переводов для этапов производства"""
+    fields = ('title', 'description')
+    required_languages = ('uz',)
+
+
+@register(CompanyHistory)
+class CompanyHistoryTranslationOptions(TranslationOptions):
+    """Настройки переводов для истории компании"""
+    fields = ('title', 'description')
+    required_languages = ('uz',)
+
+
+@register(ProductionCapacity)
+class ProductionCapacityTranslationOptions(TranslationOptions):
+    """Настройки переводов для объемов производства"""
+    fields = ('capacity', 'description')
+    required_languages = ('uz',)
 
 
 @register(DealerAdvantage)
