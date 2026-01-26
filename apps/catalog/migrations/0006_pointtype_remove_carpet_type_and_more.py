@@ -69,6 +69,124 @@ def reverse_remove_fields(apps, schema_editor):
     pass
 
 
+def safe_add_field(apps, schema_editor, table_name, column_name, column_type, nullable=True, default=None):
+    """Безопасно добавить колонку, если она не существует"""
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.columns 
+                WHERE table_schema = 'public' 
+                AND table_name = %s
+                AND column_name = %s
+            );
+        """, [table_name, column_name])
+        exists = cursor.fetchone()[0]
+        
+        if not exists:
+            null_clause = "NULL" if nullable else "NOT NULL"
+            default_clause = f"DEFAULT {default}" if default is not None else ""
+            cursor.execute(f'ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type} {null_clause} {default_clause};')
+
+
+def add_fields_safely(apps, schema_editor):
+    """Безопасно добавить все поля, которые могут уже существовать"""
+    # Color fields
+    safe_add_field(apps, schema_editor, 'catalog_color', 'name_uz', 'VARCHAR(50)', nullable=True)
+    safe_add_field(apps, schema_editor, 'catalog_color', 'name_ru', 'VARCHAR(50)', nullable=True)
+    safe_add_field(apps, schema_editor, 'catalog_color', 'name_en', 'VARCHAR(50)', nullable=True)
+    
+    # ContactFormSubmission email
+    safe_add_field(apps, schema_editor, 'catalog_contactformsubmission', 'email', 'VARCHAR(254)', nullable=True)
+    
+    # Room fields
+    safe_add_field(apps, schema_editor, 'catalog_room', 'name_uz', 'VARCHAR(50)', nullable=True)
+    safe_add_field(apps, schema_editor, 'catalog_room', 'name_ru', 'VARCHAR(50)', nullable=True)
+    safe_add_field(apps, schema_editor, 'catalog_room', 'name_en', 'VARCHAR(50)', nullable=True)
+    
+    # Style fields
+    safe_add_field(apps, schema_editor, 'catalog_style', 'name_uz', 'VARCHAR(50)', nullable=True)
+    safe_add_field(apps, schema_editor, 'catalog_style', 'name_ru', 'VARCHAR(50)', nullable=True)
+    safe_add_field(apps, schema_editor, 'catalog_style', 'name_en', 'VARCHAR(50)', nullable=True)
+
+
+def reverse_add_fields(apps, schema_editor):
+    """Обратная операция - ничего не делаем"""
+    pass
+
+
+def safe_create_table_if_not_exists(apps, schema_editor, table_name, create_sql):
+    """Безопасно создать таблицу, если она не существует"""
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = %s
+            );
+        """, [table_name])
+        exists = cursor.fetchone()[0]
+        
+        if not exists:
+            cursor.execute(create_sql)
+
+
+def create_models_safely(apps, schema_editor):
+    """Безопасно создать все модели, если они не существуют"""
+    # Проверяем и создаем таблицы только если они не существуют
+    # Если таблица уже существует, пропускаем создание
+    tables_to_check = [
+        'catalog_companyhistory',
+        'catalog_productioncapacity',
+        'catalog_productionstep',
+    ]
+    
+    for table_name in tables_to_check:
+        with schema_editor.connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    AND table_name = %s
+                );
+            """, [table_name])
+            exists = cursor.fetchone()[0]
+            
+            if exists:
+                # Таблица уже существует, пропускаем
+                continue
+
+
+def reverse_create_models(apps, schema_editor):
+    """Обратная операция - ничего не делаем"""
+    pass
+
+
+def safe_delete_table_if_exists(apps, schema_editor, table_name):
+    """Безопасно удалить таблицу, если она существует"""
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = %s
+            );
+        """, [table_name])
+        exists = cursor.fetchone()[0]
+        
+        if exists:
+            cursor.execute(f'DROP TABLE IF EXISTS {table_name} CASCADE;')
+
+
+def delete_typecarpetcollection_safely(apps, schema_editor):
+    """Безопасно удалить таблицу TypeCarpetCollection"""
+    safe_delete_table_if_exists(apps, schema_editor, 'catalog_typecarpetcollection')
+
+
+def reverse_delete_typecarpetcollection(apps, schema_editor):
+    """Обратная операция - ничего не делаем"""
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -134,55 +252,65 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
-        migrations.AddField(
-            model_name='color',
-            name='name_en',
-            field=models.CharField(max_length=50, null=True, verbose_name='Название цвета'),
-        ),
-        migrations.AddField(
-            model_name='color',
-            name='name_ru',
-            field=models.CharField(max_length=50, null=True, verbose_name='Название цвета'),
-        ),
-        migrations.AddField(
-            model_name='color',
-            name='name_uz',
-            field=models.CharField(max_length=50, null=True, verbose_name='Название цвета'),
-        ),
-        migrations.AddField(
-            model_name='contactformsubmission',
-            name='email',
-            field=models.EmailField(blank=True, max_length=254, null=True, verbose_name='Email'),
-        ),
-        migrations.AddField(
-            model_name='room',
-            name='name_en',
-            field=models.CharField(max_length=50, null=True, verbose_name='Название комнаты'),
-        ),
-        migrations.AddField(
-            model_name='room',
-            name='name_ru',
-            field=models.CharField(max_length=50, null=True, verbose_name='Название комнаты'),
-        ),
-        migrations.AddField(
-            model_name='room',
-            name='name_uz',
-            field=models.CharField(max_length=50, null=True, verbose_name='Название комнаты'),
-        ),
-        migrations.AddField(
-            model_name='style',
-            name='name_en',
-            field=models.CharField(max_length=50, null=True, verbose_name='Название стиля'),
-        ),
-        migrations.AddField(
-            model_name='style',
-            name='name_ru',
-            field=models.CharField(max_length=50, null=True, verbose_name='Название стиля'),
-        ),
-        migrations.AddField(
-            model_name='style',
-            name='name_uz',
-            field=models.CharField(max_length=50, null=True, verbose_name='Название стиля'),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(
+                    add_fields_safely,
+                    reverse_add_fields,
+                ),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name='color',
+                    name='name_en',
+                    field=models.CharField(max_length=50, null=True, verbose_name='Название цвета'),
+                ),
+                migrations.AddField(
+                    model_name='color',
+                    name='name_ru',
+                    field=models.CharField(max_length=50, null=True, verbose_name='Название цвета'),
+                ),
+                migrations.AddField(
+                    model_name='color',
+                    name='name_uz',
+                    field=models.CharField(max_length=50, null=True, verbose_name='Название цвета'),
+                ),
+                migrations.AddField(
+                    model_name='contactformsubmission',
+                    name='email',
+                    field=models.EmailField(blank=True, max_length=254, null=True, verbose_name='Email'),
+                ),
+                migrations.AddField(
+                    model_name='room',
+                    name='name_en',
+                    field=models.CharField(max_length=50, null=True, verbose_name='Название комнаты'),
+                ),
+                migrations.AddField(
+                    model_name='room',
+                    name='name_ru',
+                    field=models.CharField(max_length=50, null=True, verbose_name='Название комнаты'),
+                ),
+                migrations.AddField(
+                    model_name='room',
+                    name='name_uz',
+                    field=models.CharField(max_length=50, null=True, verbose_name='Название комнаты'),
+                ),
+                migrations.AddField(
+                    model_name='style',
+                    name='name_en',
+                    field=models.CharField(max_length=50, null=True, verbose_name='Название стиля'),
+                ),
+                migrations.AddField(
+                    model_name='style',
+                    name='name_ru',
+                    field=models.CharField(max_length=50, null=True, verbose_name='Название стиля'),
+                ),
+                migrations.AddField(
+                    model_name='style',
+                    name='name_uz',
+                    field=models.CharField(max_length=50, null=True, verbose_name='Название стиля'),
+                ),
+            ],
         ),
         migrations.AlterField(
             model_name='contactformsubmission',
@@ -267,7 +395,17 @@ class Migration(migrations.Migration):
                 'ordering': ['order'],
             },
         ),
-        migrations.DeleteModel(
-            name='TypeCarpetCollection',
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(
+                    delete_typecarpetcollection_safely,
+                    reverse_delete_typecarpetcollection,
+                ),
+            ],
+            state_operations=[
+                migrations.DeleteModel(
+                    name='TypeCarpetCollection',
+                ),
+            ],
         ),
     ]
