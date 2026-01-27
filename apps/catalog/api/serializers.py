@@ -54,8 +54,18 @@ class StyleSerializer(serializers.ModelSerializer):
         if request:
             language = get_language_from_request(request)
             
-            if language and language != "uz":
-                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+            # Всегда используем языковые поля, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"name{lang_suffix}"
+            
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["name"] = lang_value
+                elif not representation.get("name"):
+                    representation["name"] = instance.name
+            else:
+                representation["name"] = instance.name
         
         return representation
 
@@ -76,8 +86,18 @@ class RoomSerializer(serializers.ModelSerializer):
         if request:
             language = get_language_from_request(request)
             
-            if language and language != "uz":
-                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+            # Всегда используем языковые поля, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"name{lang_suffix}"
+            
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["name"] = lang_value
+                elif not representation.get("name"):
+                    representation["name"] = instance.name
+            else:
+                representation["name"] = instance.name
         
         return representation
 
@@ -98,8 +118,18 @@ class ColorSerializer(serializers.ModelSerializer):
         if request:
             language = get_language_from_request(request)
             
-            if language and language != "uz":
-                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+            # Всегда используем языковые поля, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"name{lang_suffix}"
+            
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["name"] = lang_value
+                elif not representation.get("name"):
+                    representation["name"] = instance.name
+            else:
+                representation["name"] = instance.name
         
         return representation
 
@@ -120,8 +150,18 @@ class PointTypeSerializer(serializers.ModelSerializer):
         if request:
             language = get_language_from_request(request)
             
-            if language and language != "uz":
-                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+            # Всегда используем языковые поля, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"name{lang_suffix}"
+            
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["name"] = lang_value
+                elif not representation.get("name"):
+                    representation["name"] = instance.name
+            else:
+                representation["name"] = instance.name
         
         return representation
 
@@ -144,6 +184,30 @@ class CollectionListSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "slug", "created_at"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            # Всегда используем языковые поля, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            
+            for field in ['name', 'description']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    elif not representation.get(field):
+                        representation[field] = getattr(instance, field, None)
+                else:
+                    representation[field] = getattr(instance, field, None)
+        
+        return representation
 
 
 class CollectionDetailSerializer(serializers.ModelSerializer):
@@ -164,11 +228,35 @@ class CollectionDetailSerializer(serializers.ModelSerializer):
             "update_at",
         ]
         read_only_fields = ["id", "slug", "created_at", "update_at"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            # Всегда используем языковые поля, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            
+            for field in ['name', 'description']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    elif not representation.get(field):
+                        representation[field] = getattr(instance, field, None)
+                else:
+                    representation[field] = getattr(instance, field, None)
+        
+        return representation
 
 
 class CarpetListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка ковров"""
-    collection_name = serializers.CharField(source="collection.name", read_only=True)
+    collection_name = serializers.SerializerMethodField()
     collection_slug = serializers.CharField(source="collection.slug", read_only=True)
     styles = StyleSerializer(many=True, read_only=True)
     rooms = RoomSerializer(many=True, read_only=True)
@@ -184,6 +272,12 @@ class CarpetListSerializer(serializers.ModelSerializer):
             "collection_name",
             "collection_slug",
             "material",
+            "density",
+            "base",
+            "pile_height",
+            "yarn_composition",
+            "weight",
+            "roll",
             "is_new",
             "is_popular",
             "styles",
@@ -194,6 +288,22 @@ class CarpetListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "watched", "created_at"]
     
+    def get_collection_name(self, obj):
+        """Получить название коллекции на нужном языке"""
+        request = self.context.get("request")
+        if request:
+            language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"name{lang_suffix}"
+            
+            collection = obj.collection
+            if hasattr(collection, lang_field):
+                lang_value = getattr(collection, lang_field, None)
+                if lang_value:
+                    return lang_value
+            return collection.name
+        return obj.collection.name
+    
     def to_representation(self, instance):
         """Возвращает данные на языке из query параметра lang"""
         representation = super().to_representation(instance)
@@ -202,8 +312,26 @@ class CarpetListSerializer(serializers.ModelSerializer):
         if request:
             language = get_language_from_request(request)
             
-            if language and language != "uz":
-                representation["material"] = getattr(instance, f"material_{language}", instance.material)
+            # Всегда используем языковые поля, если они доступны
+            # Для uz используем code_uz, material_uz и т.д., если они есть
+            lang_suffix = f"_{language}" if language else ""
+            
+            # Получаем значение с учетом языка, если поле существует
+            multilingual_fields = ['code', 'material', 'density', 'base', 'pile_height', 'yarn_composition', 'weight']
+            
+            for field in multilingual_fields:
+                lang_field = f"{field}{lang_suffix}"
+                # Проверяем, существует ли языковое поле и есть ли в нем значение
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    # Если языковое поле пустое, используем базовое поле как fallback
+                    elif not representation.get(field):
+                        representation[field] = getattr(instance, field, None)
+                else:
+                    # Если языкового поля нет, используем базовое поле
+                    representation[field] = getattr(instance, field, None)
         
         return representation
 
@@ -250,13 +378,25 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
         if request:
             language = get_language_from_request(request)
             
-            if language and language != "uz":
-                representation["material"] = getattr(instance, f"material_{language}", instance.material)
-                representation["density"] = getattr(instance, f"density_{language}", instance.density)
-                representation["base"] = getattr(instance, f"base_{language}", instance.base)
-                representation["pile_height"] = getattr(instance, f"pile_height_{language}", instance.pile_height)
-                representation["yarn_composition"] = getattr(instance, f"yarn_composition_{language}", instance.yarn_composition)
-                representation["weight"] = getattr(instance, f"weight_{language}", instance.weight)
+            # Всегда используем языковые поля, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            
+            # Получаем значение с учетом языка, если поле существует
+            multilingual_fields = ['code', 'material', 'density', 'base', 'pile_height', 'yarn_composition', 'weight']
+            
+            for field in multilingual_fields:
+                lang_field = f"{field}{lang_suffix}"
+                # Проверяем, существует ли языковое поле и есть ли в нем значение
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    # Если языковое поле пустое, используем базовое поле как fallback
+                    elif not representation.get(field):
+                        representation[field] = getattr(instance, field, None)
+                else:
+                    # Если языкового поля нет, используем базовое поле
+                    representation[field] = getattr(instance, field, None)
         
         return representation
 
@@ -798,8 +938,18 @@ class RegionSerializer(serializers.ModelSerializer):
         if request:
             language = get_language_from_request(request)
             
-            if language and language != "uz":
-                representation["name"] = getattr(instance, f"name_{language}", instance.name)
+            # Всегда используем языковые поля, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"name{lang_suffix}"
+            
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["name"] = lang_value
+                elif not representation.get("name"):
+                    representation["name"] = instance.name
+            else:
+                representation["name"] = instance.name
         
         return representation
 

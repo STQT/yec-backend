@@ -176,5 +176,5 @@ class CollectionTranslationOptions(TranslationOptions):
 @register(Carpet)
 class CarpetTranslationOptions(TranslationOptions):
     """Настройки переводов для характеристик ковра"""
-    fields = ('material', 'density', 'base', 'pile_height', 'yarn_composition', 'weight')
+    fields = ('code', 'material', 'density', 'base', 'pile_height', 'yarn_composition', 'weight')
     required_languages = ('uz',)

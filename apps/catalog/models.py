@@ -324,10 +324,15 @@ class Carpet(models.Model):
     colors = models.ManyToManyField(Color, blank=True, verbose_name='Цвета', related_name='carpets')
 
     def save(self, *args, **kwargs):
-        # Если имя товара не задано, берем его из имени файла изображения
-        if not self.code and self.photo:
+        # Если код не задан, берем его из имени файла изображения
+        # Устанавливаем для основного языка (uz) или базового поля code
+        if not self.code and not getattr(self, 'code_uz', None) and self.photo:
             # Извлекаем имя файла без расширения
-            self.code = self.photo.name.split('/')[-1].split('.')[0]
+            code_value = self.photo.name.split('/')[-1].split('.')[0]
+            # Устанавливаем для основного языка и базового поля
+            self.code = code_value
+            if hasattr(self, 'code_uz'):
+                self.code_uz = code_value
         super(Carpet, self).save(*args, **kwargs)
 
     def __str__(self):

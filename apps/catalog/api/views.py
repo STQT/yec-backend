@@ -310,7 +310,7 @@ class HomePageViewSet(ListModelMixin, GenericViewSet):
         if instance:
             serializer = self.get_serializer(instance)
             return Response(serializer.data)
-        return Response({}, status=status.HTTP_404_NOT_FOUND)
+        return Response({}, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=["О компании"])
@@ -327,7 +327,7 @@ class AboutPageViewSet(ListModelMixin, GenericViewSet):
         if instance:
             serializer = self.get_serializer(instance)
             return Response(serializer.data)
-        return Response({}, status=status.HTTP_404_NOT_FOUND)
+        return Response({}, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=["Контакты"])
@@ -344,7 +344,7 @@ class ContactPageViewSet(ListModelMixin, GenericViewSet):
         if instance:
             serializer = self.get_serializer(instance)
             return Response(serializer.data)
-        return Response({}, status=status.HTTP_404_NOT_FOUND)
+        return Response({}, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=["Регионы и торговые точки"])
