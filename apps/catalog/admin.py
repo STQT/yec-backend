@@ -6,6 +6,7 @@ from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
     Carpet,
+    CarpetImage,
     Collection,
     Color,
     CompanyHistory,
@@ -32,7 +33,7 @@ from apps.catalog.models import (
 class CollectionAdmin(admin.ModelAdmin):
     """Админка для коллекций"""
     list_display = ["image_preview", "name", "slug", "is_published", "is_new", "carpets_count", "created_at"]
-    list_display_links = ["name"]
+    list_display_links = ["image_preview", "name"]
     list_filter = ["is_published", "is_new", "created_at"]
     search_fields = ["name", "description"]
     readonly_fields = ["image_preview", "slug", "created_at", "update_at", "carpets_count"]
@@ -162,16 +163,28 @@ class PointTypeAdmin(admin.ModelAdmin):
 
 
 class CarpetImageInline(admin.StackedInline):
-    """Inline для дополнительных изображений ковра (если понадобится в будущем)"""
-    model = Carpet
-    extra = 0
-    fields = ["photo", "code"]
-    readonly_fields = ["photo"]
+    """Inline для изображений галереи ковра"""
+    model = CarpetImage
+    extra = 1
+    fields = ["image", "order", "image_preview"]
+    readonly_fields = ["image_preview"]
+    ordering = ["order"]
+    
+    def image_preview(self, obj):
+        """Превью изображения"""
+        if obj and obj.image:
+            return format_html(
+                '<img src="{}" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image.url
+            )
+        return "-"
+    image_preview.short_description = "Превью"
 
 
 @admin.register(Carpet)
 class CarpetAdmin(admin.ModelAdmin):
     """Админка для ковров"""
+    inlines = [CarpetImageInline]
     list_display = [
         "photo_preview",
         "code",
@@ -183,7 +196,7 @@ class CarpetAdmin(admin.ModelAdmin):
         "watched",
         "created_at"
     ]
-    list_display_links = ["code"]
+    list_display_links = ["photo_preview", "code"]
     list_filter = [
         "is_published",
         "is_new",

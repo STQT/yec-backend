@@ -122,7 +122,7 @@ class CarpetFilter(filters.FilterSet):
 class CarpetViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     """ViewSet для ковров"""
     queryset = Carpet.objects.filter(is_published=True).select_related("collection").prefetch_related(
-        "styles", "rooms", "colors"
+        "styles", "rooms", "colors", "gallery_images"
     )
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -198,7 +198,7 @@ class CollectionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         collection = self.get_object()
         carpets = Carpet.objects.filter(
             collection=collection, is_published=True
-        ).select_related("collection").prefetch_related("styles", "rooms", "colors")
+        ).select_related("collection").prefetch_related("styles", "rooms", "colors", "gallery_images")
         
         # Применяем фильтры из запроса
         filter_backend = DjangoFilterBackend()

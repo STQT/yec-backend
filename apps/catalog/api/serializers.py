@@ -4,6 +4,7 @@ from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
     Carpet,
+    CarpetImage,
     Collection,
     Color,
     CompanyHistory,
@@ -254,6 +255,16 @@ class CollectionDetailSerializer(serializers.ModelSerializer):
         return representation
 
 
+class CarpetImageSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображений галереи ковра"""
+    image = ImageFieldSerializer(required=False, allow_null=True)
+    
+    class Meta:
+        model = CarpetImage
+        fields = ["id", "image", "order"]
+        read_only_fields = ["id"]
+
+
 class CarpetListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка ковров"""
     collection_name = serializers.SerializerMethodField()
@@ -262,6 +273,7 @@ class CarpetListSerializer(serializers.ModelSerializer):
     rooms = RoomSerializer(many=True, read_only=True)
     colors = ColorSerializer(many=True, read_only=True)
     photo = ImageFieldSerializer(required=False, allow_null=True)
+    gallery_images = serializers.SerializerMethodField()
 
     class Meta:
         model = Carpet
@@ -283,10 +295,16 @@ class CarpetListSerializer(serializers.ModelSerializer):
             "styles",
             "rooms",
             "colors",
+            "gallery_images",
             "watched",
             "created_at",
         ]
         read_only_fields = ["id", "watched", "created_at"]
+    
+    def get_gallery_images(self, obj):
+        """Получить список изображений галереи ковра"""
+        images = obj.gallery_images.all().order_by('order')
+        return CarpetImageSerializer(images, many=True, context=self.context).data
     
     def get_collection_name(self, obj):
         """Получить название коллекции на нужном языке"""
@@ -343,6 +361,7 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
     rooms = RoomSerializer(many=True, read_only=True)
     colors = ColorSerializer(many=True, read_only=True)
     photo = ImageFieldSerializer(required=False, allow_null=True)
+    gallery_images = serializers.SerializerMethodField()
 
     class Meta:
         model = Carpet
@@ -363,12 +382,18 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
             "styles",
             "rooms",
             "colors",
+            "gallery_images",
             "watched",
             "is_published",
             "created_at",
             "update_at",
         ]
         read_only_fields = ["id", "watched", "created_at", "update_at"]
+    
+    def get_gallery_images(self, obj):
+        """Получить список изображений галереи ковра"""
+        images = obj.gallery_images.all().order_by('order')
+        return CarpetImageSerializer(images, many=True, context=self.context).data
     
     def to_representation(self, instance):
         """Возвращает данные на языке из query параметра lang"""

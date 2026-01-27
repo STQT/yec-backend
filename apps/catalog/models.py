@@ -178,6 +178,15 @@ def carpet_image_upload_to(instance, filename):
     return os.path.join('photos/collections', collection_name, filename)
 
 
+# Функция для определения пути загрузки изображений галереи ковра
+def carpet_gallery_upload_to(instance, filename):
+    # Получаем имя коллекции и код ковра
+    collection_name = instance.carpet.collection.name
+    carpet_code = instance.carpet.code or f'carpet_{instance.carpet.id}'
+    # Формируем путь к файлу
+    return os.path.join('photos/collections', collection_name, 'gallery', carpet_code, filename)
+
+
 # Модель для стилей ковров
 class Style(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название стиля')
@@ -342,6 +351,31 @@ class Carpet(models.Model):
         verbose_name = 'Ковер'
         verbose_name_plural = 'Ковры'
         ordering = ['-created_at']
+
+
+# Модель для изображений галереи ковра
+class CarpetImage(models.Model):
+    """Изображение для галереи ковра"""
+    carpet = models.ForeignKey(
+        Carpet,
+        on_delete=models.CASCADE,
+        related_name='gallery_images',
+        verbose_name='Ковер'
+    )
+    image = models.ImageField(
+        upload_to=carpet_gallery_upload_to,
+        verbose_name='Изображение'
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    
+    def __str__(self):
+        return f"Изображение {self.order} - {self.carpet.code or f'Ковер #{self.carpet.id}'}"
+    
+    class Meta:
+        verbose_name = 'Изображение ковра'
+        verbose_name_plural = 'Изображения ковра'
+        ordering = ['order', 'created_at']
 
 
 # Модель для новостей
