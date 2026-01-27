@@ -1,6 +1,42 @@
 from django.db import models
 from django.urls import reverse
+from django.utils.text import slugify
 import os
+
+
+def generate_unique_slug(model_class, source_text, current_pk=None, current_slug=None):
+    """
+    Универсальная функция для генерации уникального slug
+    
+    Args:
+        model_class: Класс модели
+        source_text: Текст для генерации slug
+        current_pk: PK текущего объекта (для исключения из проверки уникальности)
+        current_slug: Текущий slug (для проверки, нужно ли обновлять)
+    
+    Returns:
+        str: Уникальный slug
+    """
+    if not source_text:
+        return None
+    
+    new_slug = slugify(source_text)
+    
+    # Проверяем уникальность и добавляем число если нужно
+    original_slug = new_slug
+    counter = 1
+    queryset = model_class.objects.filter(slug=new_slug)
+    if current_pk:
+        queryset = queryset.exclude(pk=current_pk)
+    
+    while queryset.exists():
+        new_slug = f"{original_slug}-{counter}"
+        queryset = model_class.objects.filter(slug=new_slug)
+        if current_pk:
+            queryset = queryset.exclude(pk=current_pk)
+        counter += 1
+    
+    return new_slug
 
 
 # Модель для этапов производства
@@ -95,10 +131,33 @@ class Collection(models.Model):
     description = models.TextField(default='Описания коллекции', verbose_name='Описания', blank=True, null=True)
     image = models.ImageField(upload_to='photos/collection_avatar/%Y/%m/', verbose_name='photo Коллекции')
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
-    slug = models.SlugField(unique=True, null=True, verbose_name='Slug')
+    slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     is_new = models.BooleanField(default=False, verbose_name='Новая коллекция')
+
+    def save(self, *args, **kwargs):
+        # Автогенерация slug из name_uz (основной язык) или name, если name_uz не заполнен
+        source_name = getattr(self, 'name_uz', None) or self.name
+        
+        if source_name:
+            need_update_slug = False
+            
+            if not self.slug:
+                need_update_slug = True
+            elif self.pk:
+                try:
+                    old_obj = Collection.objects.get(pk=self.pk)
+                    old_name = getattr(old_obj, 'name_uz', None) or old_obj.name
+                    if old_name != source_name:
+                        need_update_slug = True
+                except Collection.DoesNotExist:
+                    need_update_slug = True
+            
+            if need_update_slug:
+                self.slug = generate_unique_slug(Collection, source_name, self.pk)
+        
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -122,7 +181,30 @@ def carpet_image_upload_to(instance, filename):
 # Модель для стилей ковров
 class Style(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название стиля')
-    slug = models.SlugField(unique=True, verbose_name='Slug')
+    slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
+
+    def save(self, *args, **kwargs):
+        # Автогенерация slug из name_uz (основной язык) или name, если name_uz не заполнен
+        source_name = getattr(self, 'name_uz', None) or self.name
+        
+        if source_name:
+            need_update_slug = False
+            
+            if not self.slug:
+                need_update_slug = True
+            elif self.pk:
+                try:
+                    old_obj = Style.objects.get(pk=self.pk)
+                    old_name = getattr(old_obj, 'name_uz', None) or old_obj.name
+                    if old_name != source_name:
+                        need_update_slug = True
+                except Style.DoesNotExist:
+                    need_update_slug = True
+            
+            if need_update_slug:
+                self.slug = generate_unique_slug(Style, source_name, self.pk)
+        
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -135,7 +217,30 @@ class Style(models.Model):
 # Модель для комнат
 class Room(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название комнаты')
-    slug = models.SlugField(unique=True, verbose_name='Slug')
+    slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
+
+    def save(self, *args, **kwargs):
+        # Автогенерация slug из name_uz (основной язык) или name, если name_uz не заполнен
+        source_name = getattr(self, 'name_uz', None) or self.name
+        
+        if source_name:
+            need_update_slug = False
+            
+            if not self.slug:
+                need_update_slug = True
+            elif self.pk:
+                try:
+                    old_obj = Room.objects.get(pk=self.pk)
+                    old_name = getattr(old_obj, 'name_uz', None) or old_obj.name
+                    if old_name != source_name:
+                        need_update_slug = True
+                except Room.DoesNotExist:
+                    need_update_slug = True
+            
+            if need_update_slug:
+                self.slug = generate_unique_slug(Room, source_name, self.pk)
+        
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -148,9 +253,32 @@ class Room(models.Model):
 # Модель для цветов
 class Color(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название цвета')
-    slug = models.SlugField(unique=True, verbose_name='Slug')
+    slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
     hex_code = models.CharField(max_length=7, blank=True, null=True, verbose_name='HEX код цвета',
                                 help_text='Например: #FF5733')
+
+    def save(self, *args, **kwargs):
+        # Автогенерация slug из name_uz (основной язык) или name, если name_uz не заполнен
+        source_name = getattr(self, 'name_uz', None) or self.name
+        
+        if source_name:
+            need_update_slug = False
+            
+            if not self.slug:
+                need_update_slug = True
+            elif self.pk:
+                try:
+                    old_obj = Color.objects.get(pk=self.pk)
+                    old_name = getattr(old_obj, 'name_uz', None) or old_obj.name
+                    if old_name != source_name:
+                        need_update_slug = True
+                except Color.DoesNotExist:
+                    need_update_slug = True
+            
+            if need_update_slug:
+                self.slug = generate_unique_slug(Color, source_name, self.pk)
+        
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -214,7 +342,7 @@ class Carpet(models.Model):
 # Модель для новостей
 class News(models.Model):
     title = models.CharField(max_length=200, verbose_name='Заголовок')
-    slug = models.SlugField(unique=True, verbose_name='Slug')
+    slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
     description = models.TextField(blank=True, null=True, verbose_name='Краткое описание')
     cover_image = models.ImageField(
         upload_to='photos/news/%Y/%m/', 
@@ -226,6 +354,29 @@ class News(models.Model):
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+
+    def save(self, *args, **kwargs):
+        # Автогенерация slug из title_uz (основной язык) или title, если title_uz не заполнен
+        source_title = getattr(self, 'title_uz', None) or self.title
+        
+        if source_title:
+            need_update_slug = False
+            
+            if not self.slug:
+                need_update_slug = True
+            elif self.pk:
+                try:
+                    old_obj = News.objects.get(pk=self.pk)
+                    old_title = getattr(old_obj, 'title_uz', None) or old_obj.title
+                    if old_title != source_title:
+                        need_update_slug = True
+                except News.DoesNotExist:
+                    need_update_slug = True
+            
+            if need_update_slug:
+                self.slug = generate_unique_slug(News, source_title, self.pk)
+        
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -487,9 +638,32 @@ class ContactPage(models.Model):
 class Region(models.Model):
     """Модель региона (области)"""
     name = models.CharField(max_length=200, verbose_name='Название региона')
-    slug = models.SlugField(unique=True, verbose_name='Slug')
+    slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
     order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    
+    def save(self, *args, **kwargs):
+        # Автогенерация slug из name_uz (основной язык) или name, если name_uz не заполнен
+        source_name = getattr(self, 'name_uz', None) or self.name
+        
+        if source_name:
+            need_update_slug = False
+            
+            if not self.slug:
+                need_update_slug = True
+            elif self.pk:
+                try:
+                    old_obj = Region.objects.get(pk=self.pk)
+                    old_name = getattr(old_obj, 'name_uz', None) or old_obj.name
+                    if old_name != source_name:
+                        need_update_slug = True
+                except Region.DoesNotExist:
+                    need_update_slug = True
+            
+            if need_update_slug:
+                self.slug = generate_unique_slug(Region, source_name, self.pk)
+        
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return self.name
@@ -503,9 +677,32 @@ class Region(models.Model):
 class PointType(models.Model):
     """Модель типа торговой точки"""
     name = models.CharField(max_length=200, verbose_name='Название типа')
-    slug = models.SlugField(unique=True, verbose_name='Slug')
+    slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
     order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    
+    def save(self, *args, **kwargs):
+        # Автогенерация slug из name_uz (основной язык) или name, если name_uz не заполнен
+        source_name = getattr(self, 'name_uz', None) or self.name
+        
+        if source_name:
+            need_update_slug = False
+            
+            if not self.slug:
+                need_update_slug = True
+            elif self.pk:
+                try:
+                    old_obj = PointType.objects.get(pk=self.pk)
+                    old_name = getattr(old_obj, 'name_uz', None) or old_obj.name
+                    if old_name != source_name:
+                        need_update_slug = True
+                except PointType.DoesNotExist:
+                    need_update_slug = True
+            
+            if need_update_slug:
+                self.slug = generate_unique_slug(PointType, source_name, self.pk)
+        
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return self.name

@@ -68,25 +68,44 @@ class StandardResultsSetPagination(PageNumberPagination):
     max_page_size = 100
 
 
+class CommaSeparatedMultipleChoiceFilter(filters.Filter):
+    """Кастомный фильтр для значений через запятую"""
+    
+    def __init__(self, *args, **kwargs):
+        self.to_field_name = kwargs.pop('to_field_name', 'slug')
+        self.field_name = kwargs.pop('field_name')
+        super().__init__(*args, **kwargs)
+    
+    def filter(self, qs, value):
+        if not value:
+            return qs
+        
+        # Разделяем значения по запятой
+        values = [v.strip() for v in value.split(',') if v.strip()]
+        if not values:
+            return qs
+        
+        # Применяем фильтр напрямую через ManyToMany связь
+        lookup = f"{self.field_name}__{self.to_field_name}__in"
+        return qs.filter(**{lookup: values})
+
+
 class CarpetFilter(filters.FilterSet):
     """Фильтр для ковров"""
-    styles = filters.ModelMultipleChoiceFilter(
-        field_name="styles__slug",
+    styles = CommaSeparatedMultipleChoiceFilter(
+        field_name="styles",
         to_field_name="slug",
-        queryset=Style.objects.all(),
     )
-    rooms = filters.ModelMultipleChoiceFilter(
-        field_name="rooms__slug",
+    rooms = CommaSeparatedMultipleChoiceFilter(
+        field_name="rooms",
         to_field_name="slug",
-        queryset=Room.objects.all(),
     )
-    colors = filters.ModelMultipleChoiceFilter(
-        field_name="colors__slug",
+    colors = CommaSeparatedMultipleChoiceFilter(
+        field_name="colors",
         to_field_name="slug",
-        queryset=Color.objects.all(),
     )
     collection = filters.ModelChoiceFilter(
-        field_name="collection__slug",
+        field_name="collection",
         to_field_name="slug",
         queryset=Collection.objects.all(),
     )

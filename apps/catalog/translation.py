@@ -3,6 +3,7 @@ from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
     Carpet,
+    Collection,
     Color,
     CompanyHistory,
     ContactPage,
@@ -162,6 +163,13 @@ class ColorTranslationOptions(TranslationOptions):
 class PointTypeTranslationOptions(TranslationOptions):
     """Настройки переводов для типов точек"""
     fields = ('name',)
+    required_languages = ('uz',)
+
+
+@register(Collection)
+class CollectionTranslationOptions(TranslationOptions):
+    """Настройки переводов для коллекций"""
+    fields = ('name', 'description')
     required_languages = ('uz',)
 
 
