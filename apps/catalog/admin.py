@@ -83,8 +83,24 @@ class StyleAdmin(admin.ModelAdmin):
     list_display = ["name", "slug", "carpets_count"]
     list_display_links = ["name"]
     search_fields = ["name"]
-    prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ["carpets_count"]
+    
+    fieldsets = (
+        ("Название стиля", {
+            "fields": (
+                "name_uz",
+                "name_ru",
+                "name_en",
+            )
+        }),
+    )
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Slug показывается только при редактировании существующего объекта"""
+        readonly = list(self.readonly_fields)
+        if obj:  # Если объект существует, показываем slug
+            readonly.append("slug")
+        return readonly
 
     def carpets_count(self, obj):
         """Количество ковров со стилем"""
@@ -98,8 +114,24 @@ class RoomAdmin(admin.ModelAdmin):
     list_display = ["name", "slug", "carpets_count"]
     list_display_links = ["name"]
     search_fields = ["name"]
-    prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ["carpets_count"]
+    
+    fieldsets = (
+        ("Название комнаты", {
+            "fields": (
+                "name_uz",
+                "name_ru",
+                "name_en",
+            )
+        }),
+    )
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Slug показывается только при редактировании существующего объекта"""
+        readonly = list(self.readonly_fields)
+        if obj:  # Если объект существует, показываем slug
+            readonly.append("slug")
+        return readonly
 
     def carpets_count(self, obj):
         """Количество ковров для комнаты"""
@@ -113,12 +145,31 @@ class ColorAdmin(admin.ModelAdmin):
     list_display = ["color_preview", "name", "slug", "hex_code", "carpets_count"]
     list_display_links = ["name"]
     search_fields = ["name"]
-    prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ["color_preview", "carpets_count"]
+    
+    fieldsets = (
+        ("Название цвета", {
+            "fields": (
+                "name_uz",
+                "name_ru",
+                "name_en",
+            )
+        }),
+        ("Цвет", {
+            "fields": ("hex_code", "color_preview")
+        }),
+    )
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Slug показывается только при редактировании существующего объекта"""
+        readonly = list(self.readonly_fields)
+        if obj:  # Если объект существует, показываем slug
+            readonly.append("slug")
+        return readonly
 
     def color_preview(self, obj):
         """Превью цвета"""
-        if obj.hex_code:
+        if obj and obj.hex_code:
             return format_html(
                 '<div style="width: 30px; height: 30px; background-color: {}; border-radius: 4px; border: 1px solid #ddd;"></div>',
                 obj.hex_code
@@ -139,9 +190,8 @@ class PointTypeAdmin(admin.ModelAdmin):
     list_display_links = ["name"]
     list_filter = ["is_published"]
     search_fields = ["name"]
-    prepopulated_fields = {"slug": ("name",)}
     list_editable = ["order", "is_published"]
-    readonly_fields = ["sales_points_count"]
+    readonly_fields = ["slug", "sales_points_count"]
     
     def sales_points_count(self, obj):
         """Количество торговых точек с типом"""
@@ -338,18 +388,17 @@ class NewsContentBlockInline(admin.StackedInline):
 @admin.register(News)
 class NewsAdmin(admin.ModelAdmin):
     """Админка для новостей с динамическими блоками контента"""
-    list_display = ["cover_image_preview", "title", "is_published", "created_at"]
+    list_display = ["cover_image_preview", "title", "slug", "is_published", "created_at"]
     list_display_links = ["title"]
     list_filter = ["is_published", "created_at"]
     search_fields = ["title", "description"]
-    prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ["cover_image_preview", "created_at", "update_at"]
     date_hierarchy = "created_at"
     inlines = [NewsContentBlockInline]
     
     fieldsets = (
         ("Основная информация", {
-            "fields": ("title_uz", "title_ru", "title_en", "slug")
+            "fields": ("title_uz", "title_ru", "title_en")
         }),
         ("Описание", {
             "fields": ("description_uz", "description_ru", "description_en")
@@ -365,6 +414,13 @@ class NewsAdmin(admin.ModelAdmin):
             "fields": ("created_at", "update_at")
         }),
     )
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Slug показывается только при редактировании существующего объекта"""
+        readonly = list(self.readonly_fields)
+        if obj:  # Если объект существует, показываем slug
+            readonly.append("slug")
+        return readonly
 
     def cover_image_preview(self, obj):
         """Превью главного изображения"""
@@ -762,7 +818,6 @@ class RegionAdmin(admin.ModelAdmin):
     list_display_links = ["name"]
     list_filter = ["is_published"]
     search_fields = ["name"]
-    prepopulated_fields = {"slug": ("name",)}
     list_editable = ["order", "is_published"]
     inlines = [SalesPointInline]
     
@@ -772,7 +827,6 @@ class RegionAdmin(admin.ModelAdmin):
                 "name_uz",
                 "name_ru",
                 "name_en",
-                "slug",
                 "order"
             )
         }),
@@ -780,6 +834,13 @@ class RegionAdmin(admin.ModelAdmin):
             "fields": ("is_published",)
         }),
     )
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Slug показывается только при редактировании существующего объекта"""
+        readonly = []
+        if obj:  # Если объект существует, показываем slug
+            readonly.append("slug")
+        return readonly
     
     def sales_points_count(self, obj):
         """Количество торговых точек в регионе"""

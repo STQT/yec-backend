@@ -692,15 +692,15 @@ class Region(models.Model):
                 need_update_slug = True
             elif self.pk:
                 try:
-                    old_obj = Region.objects.get(pk=self.pk)
+                    old_obj = PointType.objects.get(pk=self.pk)
                     old_name = getattr(old_obj, 'name_uz', None) or old_obj.name
                     if old_name != source_name:
                         need_update_slug = True
-                except Region.DoesNotExist:
+                except PointType.DoesNotExist:
                     need_update_slug = True
             
             if need_update_slug:
-                self.slug = generate_unique_slug(Region, source_name, self.pk)
+                self.slug = generate_unique_slug(PointType, source_name, self.pk)
         
         super().save(*args, **kwargs)
     
