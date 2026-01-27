@@ -31,16 +31,23 @@ from apps.catalog.models import (
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
     """Админка для коллекций"""
-    list_display = ["image_preview", "name", "is_published", "is_new", "carpets_count", "created_at"]
+    list_display = ["image_preview", "name", "slug", "is_published", "is_new", "carpets_count", "created_at"]
     list_display_links = ["name"]
     list_filter = ["is_published", "is_new", "created_at"]
     search_fields = ["name", "description"]
-    prepopulated_fields = {"slug": ("name",)}
-    readonly_fields = ["image_preview", "created_at", "update_at", "carpets_count"]
+    readonly_fields = ["image_preview", "slug", "created_at", "update_at", "carpets_count"]
     date_hierarchy = "created_at"
     fieldsets = (
         ("Основная информация", {
-            "fields": ("name", "slug", "description")
+            "fields": (
+                "name_uz",
+                "name_ru",
+                "name_en",
+                "slug",
+                "description_uz",
+                "description_ru",
+                "description_en"
+            )
         }),
         ("Изображение", {
             "fields": ("image", "image_preview")
@@ -199,7 +206,13 @@ class CarpetAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
     fieldsets = (
         ("Основная информация", {
-            "fields": ("code", "collection", "roll")
+            "fields": (
+                "code_uz",
+                "code_ru",
+                "code_en",
+                "collection",
+                "roll"
+            )
         }),
         ("Изображение", {
             "fields": ("photo", "photo_preview")
