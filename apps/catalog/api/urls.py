@@ -12,6 +12,7 @@ from .views import (
     FAQViewSet,
     GalleryViewSet,
     HomePageViewSet,
+    MainGalleryViewSet,
     NewsViewSet,
     PointTypeViewSet,
     RegionViewSet,
@@ -28,6 +29,7 @@ router.register("colors", ColorViewSet, basename="color")
 router.register("point-types", PointTypeViewSet, basename="point-type")
 router.register("news", NewsViewSet, basename="news")
 router.register("gallery", GalleryViewSet, basename="gallery")
+router.register("main-gallery", MainGalleryViewSet, basename="main-gallery")
 router.register("homepage", HomePageViewSet, basename="homepage")
 router.register("about", AboutPageViewSet, basename="about")
 router.register("contact", ContactPageViewSet, basename="contact")

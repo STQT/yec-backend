@@ -22,6 +22,7 @@ from apps.catalog.models import (
     FAQ,
     Gallery,
     HomePage,
+    MainGallery,
     News,
     PointType,
     Region,
@@ -42,6 +43,7 @@ from .serializers import (
     FAQSerializer,
     GallerySerializer,
     HomePageSerializer,
+    MainGallerySerializer,
     NewsDetailSerializer,
     NewsListSerializer,
     PointTypeSerializer,
@@ -294,6 +296,21 @@ class GalleryViewSet(ListModelMixin, GenericViewSet):
     @extend_schema(parameters=[LANG_PARAMETER])
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+
+@extend_schema(tags=["Нижняя галерея"])
+class MainGalleryViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для главной галереи (максимум 12 изображений)"""
+    queryset = MainGallery.objects.all().order_by('order', 'created_at')
+    serializer_class = MainGallerySerializer
+    pagination_class = None  # Без пагинации, так как максимум 12 записей
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        """Возвращает все изображения галереи (максимум 12)"""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 @extend_schema(tags=["Главная секция"])

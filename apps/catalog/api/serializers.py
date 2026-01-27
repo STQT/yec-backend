@@ -14,6 +14,7 @@ from apps.catalog.models import (
     FAQ,
     Gallery,
     HomePage,
+    MainGallery,
     News,
     NewsContentBlock,
     NewsImage,
@@ -571,6 +572,21 @@ class GallerySerializer(serializers.ModelSerializer):
             "image",
             "created_at",
             "order",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class MainGallerySerializer(serializers.ModelSerializer):
+    """Сериализатор для главной галереи"""
+    image = ImageFieldSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = MainGallery
+        fields = [
+            "id",
+            "image",
+            "order",
+            "created_at",
         ]
         read_only_fields = ["id", "created_at"]
 

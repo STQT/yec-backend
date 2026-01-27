@@ -16,6 +16,7 @@ from apps.catalog.models import (
     FAQ,
     Gallery,
     HomePage,
+    MainGallery,
     News,
     NewsContentBlock,
     NewsImage,
@@ -504,6 +505,62 @@ class GalleryAdmin(admin.ModelAdmin):
 
     class Meta:
         ordering = ["order", "-created_at"]
+
+
+@admin.register(MainGallery)
+class MainGalleryAdmin(admin.ModelAdmin):
+    """Админка для главной галереи (максимум 12 изображений)"""
+    list_display = ["image_preview", "order", "created_at", "items_count"]
+    list_display_links = ["image_preview"]
+    readonly_fields = ["image_preview", "created_at", "items_count"]
+    list_editable = ["order"]
+    fieldsets = (
+        ("Изображение", {
+            "fields": ("image", "image_preview", "order")
+        }),
+        ("Информация", {
+            "fields": ("items_count", "created_at"),
+            "classes": ("collapse",)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        """Ограничить queryset до 12 записей"""
+        qs = super().get_queryset(request)
+        return qs.order_by('order', 'created_at')
+    
+    def has_add_permission(self, request):
+        """Проверка возможности добавления новой записи"""
+        count = MainGallery.objects.count()
+        if count >= 12:
+            return False
+        return super().has_add_permission(request)
+    
+    def items_count(self, obj):
+        """Показать количество записей в галерее"""
+        count = MainGallery.objects.count()
+        return f"{count} / 12"
+    items_count.short_description = "Количество изображений"
+
+    def image_preview(self, obj):
+        """Превью изображения"""
+        if obj and obj.image:
+            return format_html(
+                '<img src="{}" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image.url
+            )
+        return "-"
+    image_preview.short_description = "Превью"
+    
+    def changelist_view(self, request, extra_context=None):
+        """Добавить предупреждение при достижении лимита"""
+        extra_context = extra_context or {}
+        count = MainGallery.objects.count()
+        if count >= 12:
+            extra_context['warning'] = f"Достигнут лимит в 12 изображений. Удалите существующие записи перед добавлением новых."
+        elif count >= 10:
+            extra_context['warning'] = f"Осталось {12 - count} свободных мест в галерее."
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 @admin.register(HomePage)

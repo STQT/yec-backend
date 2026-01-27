@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
@@ -516,6 +517,34 @@ class Gallery(models.Model):
         verbose_name = 'Изображение галереи'
         verbose_name_plural = 'Галерея'
         ordering = ['order', '-created_at']
+
+
+# Модель для главной галереи (максимум 12 изображений)
+class MainGallery(models.Model):
+    """Галерея для главной страницы с ограничением в 12 изображений"""
+    image = models.ImageField(upload_to='photos/main_gallery/%Y/%m/', verbose_name='Изображение')
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+
+    def clean(self):
+        """Валидация перед сохранением"""
+        if not self.pk:  # Только при создании новой записи
+            count = MainGallery.objects.count()
+            if count >= 12:
+                raise ValidationError("Максимальное количество изображений в галерее - 12")
+    
+    def save(self, *args, **kwargs):
+        """Сохранение с проверкой лимита"""
+        self.full_clean()  # Вызываем валидацию
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Изображение #{self.order}'
+
+    class Meta:
+        verbose_name = 'Изображение нижней галереи'
+        verbose_name_plural = 'Нижняя галерея'
+        ordering = ['order', 'created_at']
 
 
 # Модель для главной страницы
