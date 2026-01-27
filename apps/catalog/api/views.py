@@ -179,7 +179,7 @@ class CollectionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         collection = self.get_object()
         carpets = Carpet.objects.filter(
             collection=collection, is_published=True
-        ).select_related("collection", "type").prefetch_related("styles", "rooms", "colors")
+        ).select_related("collection").prefetch_related("styles", "rooms", "colors")
         
         # Применяем фильтры из запроса
         filter_backend = DjangoFilterBackend()
