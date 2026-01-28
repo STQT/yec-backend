@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
@@ -20,7 +22,6 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
-    PointType,
     ProductionCapacity,
     ProductionStep,
     Region,
@@ -182,35 +183,6 @@ class ColorAdmin(admin.ModelAdmin):
         """Количество ковров с цветом"""
         return obj.carpets.count()
     carpets_count.short_description = "Количество ковров"
-
-
-@admin.register(PointType)
-class PointTypeAdmin(admin.ModelAdmin):
-    """Админка для типов точек"""
-    list_display = ["name", "slug", "order", "is_published", "sales_points_count"]
-    list_display_links = ["name"]
-    list_filter = ["is_published"]
-    search_fields = ["name"]
-    list_editable = ["order", "is_published"]
-    readonly_fields = ["slug", "sales_points_count"]
-    
-    def sales_points_count(self, obj):
-        """Количество торговых точек с типом"""
-        return obj.sales_points.count()
-    sales_points_count.short_description = "Количество точек"
-    
-    fieldsets = (
-        ("Название типа точки", {
-            "fields": (
-                "name_uz",
-                "name_ru",
-                "name_en",
-                "slug",
-                "order",
-                "is_published"
-            )
-        }),
-    )
 
 
 class CarpetImageInline(admin.StackedInline):
@@ -509,114 +481,418 @@ class GalleryAdmin(admin.ModelAdmin):
 
 @admin.register(MainGallery)
 class MainGalleryAdmin(admin.ModelAdmin):
-    """Админка для главной галереи (максимум 12 изображений)"""
-    list_display = ["image_preview", "order", "created_at", "items_count"]
-    list_display_links = ["image_preview"]
-    readonly_fields = ["image_preview", "created_at", "items_count"]
-    list_editable = ["order"]
+    """Админка для нижней галереи (одна запись)"""
+    list_display = ["title", "created_at"]
+    list_display_links = ["title"]
+    readonly_fields = [
+        "image_1_preview",
+        "image_2_preview",
+        "image_3_preview",
+        "image_4_preview",
+        "image_5_preview",
+        "image_6_preview",
+        "image_7_preview",
+        "image_8_preview",
+        "image_9_preview",
+        "image_10_preview",
+        "image_11_preview",
+        "image_12_preview",
+        "created_at",
+        "update_at"
+    ]
     fieldsets = (
-        ("Изображение", {
-            "fields": ("image", "image_preview", "order")
-        }),
-        ("Информация", {
-            "fields": ("items_count", "created_at"),
-            "classes": ("collapse",)
-        }),
+        ("Заголовок", {"fields": ("title_uz", "title_ru", "title_en")}),
+        (
+            "Изображения",
+            {
+                "fields": (
+                    "image_1",
+                    "image_1_preview",
+                    "image_2",
+                    "image_2_preview",
+                    "image_3",
+                    "image_3_preview",
+                    "image_4",
+                    "image_4_preview",
+                    "image_5",
+                    "image_5_preview",
+                    "image_6",
+                    "image_6_preview",
+                    "image_7",
+                    "image_7_preview",
+                    "image_8",
+                    "image_8_preview",
+                    "image_9",
+                    "image_9_preview",
+                    "image_10",
+                    "image_10_preview",
+                    "image_11",
+                    "image_11_preview",
+                    "image_12",
+                    "image_12_preview",
+                )
+            },
+        ),
+        ("Служебное", {"fields": ("created_at", "update_at"), "classes": ("collapse",)}),
     )
     
-    def get_queryset(self, request):
-        """Ограничить queryset до 12 записей"""
-        qs = super().get_queryset(request)
-        return qs.order_by('order', 'created_at')
-    
     def has_add_permission(self, request):
-        """Проверка возможности добавления новой записи"""
-        count = MainGallery.objects.count()
-        if count >= 12:
-            return False
-        return super().has_add_permission(request)
-    
-    def items_count(self, obj):
-        """Показать количество записей в галерее"""
-        count = MainGallery.objects.count()
-        return f"{count} / 12"
-    items_count.short_description = "Количество изображений"
+        """Разрешаем добавление только если нет записей"""
+        return MainGallery.objects.count() == 0
 
-    def image_preview(self, obj):
-        """Превью изображения"""
-        if obj and obj.image:
+    def has_delete_permission(self, request, obj=None):
+        """Запрещаем удаление, так как должна быть только одна запись"""
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        """Открывать сразу форму редактирования (или создание, если записи нет)"""
+        obj = MainGallery.objects.first()
+        if obj:
+            return HttpResponseRedirect(reverse("admin:catalog_maingallery_change", args=[obj.pk]))
+        return HttpResponseRedirect(reverse("admin:catalog_maingallery_add"))
+    
+    def image_1_preview(self, obj):
+        """Превью первого изображения"""
+        if obj and obj.image_1:
             return format_html(
-                '<img src="{}" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px;"/>',
-                obj.image.url
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_1.url
             )
         return "-"
-    image_preview.short_description = "Превью"
+    image_1_preview.short_description = "Превью изображения 1"
     
-    def changelist_view(self, request, extra_context=None):
-        """Добавить предупреждение при достижении лимита"""
-        extra_context = extra_context or {}
-        count = MainGallery.objects.count()
-        if count >= 12:
-            extra_context['warning'] = f"Достигнут лимит в 12 изображений. Удалите существующие записи перед добавлением новых."
-        elif count >= 10:
-            extra_context['warning'] = f"Осталось {12 - count} свободных мест в галерее."
-        return super().changelist_view(request, extra_context=extra_context)
+    def image_2_preview(self, obj):
+        """Превью второго изображения"""
+        if obj and obj.image_2:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_2.url
+            )
+        return "-"
+    image_2_preview.short_description = "Превью изображения 2"
+    
+    def image_3_preview(self, obj):
+        """Превью третьего изображения"""
+        if obj and obj.image_3:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_3.url
+            )
+        return "-"
+    image_3_preview.short_description = "Превью изображения 3"
+    
+    def image_4_preview(self, obj):
+        """Превью четвертого изображения"""
+        if obj and obj.image_4:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_4.url
+            )
+        return "-"
+    image_4_preview.short_description = "Превью изображения 4"
+    
+    def image_5_preview(self, obj):
+        """Превью пятого изображения"""
+        if obj and obj.image_5:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_5.url
+            )
+        return "-"
+    image_5_preview.short_description = "Превью изображения 5"
+    
+    def image_6_preview(self, obj):
+        """Превью шестого изображения"""
+        if obj and obj.image_6:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_6.url
+            )
+        return "-"
+    image_6_preview.short_description = "Превью изображения 6"
+    
+    def image_7_preview(self, obj):
+        """Превью седьмого изображения"""
+        if obj and obj.image_7:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_7.url
+            )
+        return "-"
+    image_7_preview.short_description = "Превью изображения 7"
+    
+    def image_8_preview(self, obj):
+        """Превью восьмого изображения"""
+        if obj and obj.image_8:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_8.url
+            )
+        return "-"
+    image_8_preview.short_description = "Превью изображения 8"
+    
+    def image_9_preview(self, obj):
+        """Превью девятого изображения"""
+        if obj and obj.image_9:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_9.url
+            )
+        return "-"
+    image_9_preview.short_description = "Превью изображения 9"
+    
+    def image_10_preview(self, obj):
+        """Превью десятого изображения"""
+        if obj and obj.image_10:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_10.url
+            )
+        return "-"
+    image_10_preview.short_description = "Превью изображения 10"
+    
+    def image_11_preview(self, obj):
+        """Превью одиннадцатого изображения"""
+        if obj and obj.image_11:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_11.url
+            )
+        return "-"
+    image_11_preview.short_description = "Превью изображения 11"
+    
+    def image_12_preview(self, obj):
+        """Превью двенадцатого изображения"""
+        if obj and obj.image_12:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image_12.url
+            )
+        return "-"
+    image_12_preview.short_description = "Превью изображения 12"
 
 
 @admin.register(HomePage)
 class HomePageAdmin(admin.ModelAdmin):
-    """Админка для главной страницы"""
-    list_display = ["image_preview", "title", "is_published", "created_at"]
-    list_display_links = ["title"]
+    """Админка для главной страницы с табами"""
+    list_display = ["banner_title_preview", "is_published", "created_at"]
+    list_display_links = ["banner_title_preview"]
     list_filter = ["is_published", "created_at"]
-    search_fields = ["title", "description"]
-    readonly_fields = ["image_preview", "created_at", "update_at"]
+    search_fields = ["banner_title_uz", "banner_title_ru", "banner_title_en"]
+    readonly_fields = [
+        "banner_image_preview",
+        "banner_showroom_image_preview",
+        "about_image_1_preview",
+        "about_image_2_preview",
+        "about_image_3_preview",
+        "showroom_image_preview",
+        "created_at",
+        "update_at"
+    ]
     date_hierarchy = "created_at"
+    
     fieldsets = (
-        ("Заголовок и описание", {
+        # ========== ТАБ 1: БАННЕР ==========
+        ("Баннер", {
             "fields": (
-                "title_uz",
-                "title_ru",
-                "title_en",
-                "description_uz",
-                "description_ru",
-                "description_en"
+                "banner_title_uz",
+                "banner_title_ru",
+                "banner_title_en",
+                "banner_description_uz",
+                "banner_description_ru",
+                "banner_description_en",
+                "banner_link_uz",
+                "banner_link_ru",
+                "banner_link_en",
+                "banner_image",
+                "banner_image_preview",
+                "banner_video",
+                "banner_showroom_title_uz",
+                "banner_showroom_title_ru",
+                "banner_showroom_title_en",
+                "banner_showroom_link_uz",
+                "banner_showroom_link_ru",
+                "banner_showroom_link_en",
+                "banner_showroom_image",
+                "banner_showroom_image_preview",
             )
         }),
-        ("Секция коллекций", {
+        # ========== ТАБ 2: О НАС ==========
+        ("О нас", {
             "fields": (
-                "collection_link_uz",
-                "collection_link_ru",
-                "collection_link_en",
+                "about_title_uz",
+                "about_title_ru",
+                "about_title_en",
+                "about_link_uz",
+                "about_link_ru",
+                "about_link_en",
+                "about_youtube_link_uz",
+                "about_youtube_link_ru",
+                "about_youtube_link_en",
+                "about_bottom_description_uz",
+                "about_bottom_description_ru",
+                "about_bottom_description_en",
+                "about_image_1",
+                "about_image_1_preview",
+                "about_image_2",
+                "about_image_2_preview",
+                "about_image_3",
+                "about_image_3_preview",
             )
         }),
-        ("Секция шоурума", {
+        # ========== ТАБ 3: ШОУРУМ ==========
+        ("Шоурум", {
             "fields": (
+                "showroom_image",
+                "showroom_image_preview",
                 "showroom_title_uz",
                 "showroom_title_ru",
                 "showroom_title_en",
                 "showroom_link_uz",
                 "showroom_link_ru",
-                "showroom_link_en"
+                "showroom_link_en",
             )
         }),
-        ("Медиафайлы", {
-            "fields": ("image", "video", "image_preview")
+        # ========== ТАБ 4: ПРЕИМУЩЕСТВА ==========
+        ("Преимущества", {
+            "fields": (
+                # Карточка 1
+                "advantage_1_title_uz",
+                "advantage_1_title_ru",
+                "advantage_1_title_en",
+                "advantage_1_icon",
+                "advantage_1_description_uz",
+                "advantage_1_description_ru",
+                "advantage_1_description_en",
+                # Карточка 2
+                "advantage_2_title_uz",
+                "advantage_2_title_ru",
+                "advantage_2_title_en",
+                "advantage_2_description_uz",
+                "advantage_2_description_ru",
+                "advantage_2_description_en",
+                # Карточка 3
+                "advantage_3_title_uz",
+                "advantage_3_title_ru",
+                "advantage_3_title_en",
+                "advantage_3_description_uz",
+                "advantage_3_description_ru",
+                "advantage_3_description_en",
+                # Карточка 4
+                "advantage_4_title_uz",
+                "advantage_4_title_ru",
+                "advantage_4_title_en",
+                "advantage_4_icon",
+                "advantage_4_description_uz",
+                "advantage_4_description_ru",
+                "advantage_4_description_en",
+            )
         }),
-        ("Настройки и даты", {
-            "fields": ("is_published", "created_at", "update_at")
+        # ========== ТАБ 5: ПРИЗЫВ К ДЕЙСТВИЮ ==========
+        ("Призыв к действию", {
+            "fields": (
+                "cta_title_uz",
+                "cta_title_ru",
+                "cta_title_en",
+                "cta_description_uz",
+                "cta_description_ru",
+                "cta_description_en",
+                "cta_contact_link",
+                "cta_dealer_link",
+            )
+        }),
+        # ========== НАСТРОЙКИ ==========
+        ("Настройки", {
+            "fields": ("is_published", "created_at", "update_at"),
+            # не делаем collapse, чтобы табы корректно работали
         }),
     )
-
-    def image_preview(self, obj):
-        """Превью изображения"""
-        if obj.image:
+    
+    def changelist_view(self, request, extra_context=None):
+        """Перенаправляем на форму редактирования, если есть запись, или на создание"""
+        obj = HomePage.objects.first()
+        if obj:
+            return HttpResponseRedirect(
+                reverse('admin:catalog_homepage_change', args=[obj.pk])
+            )
+        return HttpResponseRedirect(
+            reverse('admin:catalog_homepage_add')
+        )
+    
+    def has_add_permission(self, request):
+        """Разрешаем добавление только если нет записей"""
+        return HomePage.objects.count() == 0
+    
+    def has_delete_permission(self, request, obj=None):
+        """Запрещаем удаление, так как должна быть только одна запись"""
+        return False
+    
+    def banner_title_preview(self, obj):
+        """Превью заголовка для списка"""
+        if obj:
+            return obj.banner_title_uz if hasattr(obj, 'banner_title_uz') else obj.banner_title
+        return "-"
+    banner_title_preview.short_description = "Заголовок"
+    
+    def banner_image_preview(self, obj):
+        """Превью изображения баннера"""
+        if obj and obj.banner_image:
             return format_html(
                 '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
-                obj.image.url
+                obj.banner_image.url
             )
         return "-"
-    image_preview.short_description = "Превью"
+    banner_image_preview.short_description = "Превью изображения баннера"
+    
+    def banner_showroom_image_preview(self, obj):
+        """Превью изображения шоурума в баннере"""
+        if obj and obj.banner_showroom_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.banner_showroom_image.url
+            )
+        return "-"
+    banner_showroom_image_preview.short_description = "Превью изображения шоурума"
+    
+    def about_image_1_preview(self, obj):
+        """Превью первого изображения секции 'О нас'"""
+        if obj and obj.about_image_1:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.about_image_1.url
+            )
+        return "-"
+    about_image_1_preview.short_description = "Превью изображения 1"
+    
+    def about_image_2_preview(self, obj):
+        """Превью второго изображения секции 'О нас'"""
+        if obj and obj.about_image_2:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.about_image_2.url
+            )
+        return "-"
+    about_image_2_preview.short_description = "Превью изображения 2"
+    
+    def about_image_3_preview(self, obj):
+        """Превью третьего изображения секции 'О нас'"""
+        if obj and obj.about_image_3:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.about_image_3.url
+            )
+        return "-"
+    about_image_3_preview.short_description = "Превью изображения 3"
+    
+    def showroom_image_preview(self, obj):
+        """Превью изображения секции шоурума"""
+        if obj and obj.showroom_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.showroom_image.url
+            )
+        return "-"
+    showroom_image_preview.short_description = "Превью изображения шоурума"
 
 
 class ProductionStepInline(admin.StackedInline):
@@ -853,7 +1129,6 @@ class SalesPointInline(admin.StackedInline):
         "name_uz",
         "name_ru",
         "name_en",
-        "point_type",
         "address_uz",
         "address_ru",
         "address_en",

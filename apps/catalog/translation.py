@@ -10,10 +10,10 @@ from apps.catalog.models import (
     DealerAdvantage,
     FAQ,
     HomePage,
+    MainGallery,
     News,
     NewsContentBlock,
     NewsImage,
-    PointType,
     ProductionCapacity,
     ProductionStep,
     Region,
@@ -26,8 +26,42 @@ from apps.catalog.models import (
 @register(HomePage)
 class HomePageTranslationOptions(TranslationOptions):
     """Настройки переводов для модели HomePage"""
-    fields = ('title', 'description', 'collection_link', 'showroom_title', 'showroom_link')
+    fields = (
+        # Секция 1: Баннер
+        'banner_title',
+        'banner_description',
+        'banner_link',
+        'banner_showroom_title',
+        'banner_showroom_link',
+        # Секция 2: О нас
+        'about_title',
+        'about_link',
+        'about_youtube_link',
+        'about_bottom_description',
+        # Секция 3: Шоурум
+        'showroom_title',
+        'showroom_link',
+        # Секция 4: Преимущества
+        'advantage_1_title',
+        'advantage_1_description',
+        'advantage_2_title',
+        'advantage_2_description',
+        'advantage_3_title',
+        'advantage_3_description',
+        'advantage_4_title',
+        'advantage_4_description',
+        # Секция 5: Призыв к действию
+        'cta_title',
+        'cta_description',
+    )
     required_languages = ('uz',)  # Узбекский обязателен
+
+
+@register(MainGallery)
+class MainGalleryTranslationOptions(TranslationOptions):
+    """Настройки переводов для нижней галереи"""
+    fields = ("title",)
+    required_languages = ("uz",)
 
 
 @register(AboutPage)
@@ -155,13 +189,6 @@ class StyleTranslationOptions(TranslationOptions):
 @register(Color)
 class ColorTranslationOptions(TranslationOptions):
     """Настройки переводов для цветов"""
-    fields = ('name',)
-    required_languages = ('uz',)
-
-
-@register(PointType)
-class PointTypeTranslationOptions(TranslationOptions):
-    """Настройки переводов для типов точек"""
     fields = ('name',)
     required_languages = ('uz',)
 

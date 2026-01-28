@@ -519,59 +519,221 @@ class Gallery(models.Model):
         ordering = ['order', '-created_at']
 
 
-# Модель для главной галереи (максимум 12 изображений)
+# Нижняя галерея на главной странице (одна запись с 12 фиксированными изображениями)
 class MainGallery(models.Model):
-    """Галерея для главной страницы с ограничением в 12 изображений"""
-    image = models.ImageField(upload_to='photos/main_gallery/%Y/%m/', verbose_name='Изображение')
-    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    """Нижняя галерея (одна запись)"""
 
-    def clean(self):
-        """Валидация перед сохранением"""
-        if not self.pk:  # Только при создании новой записи
-            count = MainGallery.objects.count()
-            if count >= 12:
-                raise ValidationError("Максимальное количество изображений в галерее - 12")
-    
-    def save(self, *args, **kwargs):
-        """Сохранение с проверкой лимита"""
-        self.full_clean()  # Вызываем валидацию
-        super().save(*args, **kwargs)
+    title = models.CharField(max_length=200, verbose_name="Заголовок")
 
-    def __str__(self):
-        return f'Изображение #{self.order}'
+    image_1 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 1",
+    )
+    image_2 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 2",
+    )
+    image_3 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 3",
+    )
+    image_4 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 4",
+    )
+    image_5 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 5",
+    )
+    image_6 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 6",
+    )
+    image_7 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 7",
+    )
+    image_8 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 8",
+    )
+    image_9 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 9",
+    )
+    image_10 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 10",
+    )
+    image_11 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 11",
+    )
+    image_12 = models.ImageField(
+        upload_to="photos/main_gallery/%Y/%m/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение 12",
+    )
 
-    class Meta:
-        verbose_name = 'Изображение нижней галереи'
-        verbose_name_plural = 'Нижняя галерея'
-        ordering = ['order', 'created_at']
-
-
-# Модель для главной страницы
-class HomePage(models.Model):
-    """Модель главной страницы с мультиязычными полями"""
-    image = models.ImageField(upload_to='photos/homepage/%Y/%m/', verbose_name='Изображение')
-    video = models.FileField(upload_to='files/homepage/%Y/%m/', verbose_name='Видео')
-    
-    # Мультиязычные поля
-    title = models.CharField(max_length=200, verbose_name='Заголовок')
-    description = models.TextField(verbose_name='Описание')
-    collection_link = models.CharField(max_length=200, verbose_name='Ссылка на коллекцию')
-    
-    # Поля для шоурума
-    showroom_title = models.CharField(max_length=200, verbose_name='Заголовок шоурума')
-    showroom_link = models.CharField(max_length=200, verbose_name='Ссылка на шоурум')
-    
-    is_published = models.BooleanField(default=True, verbose_name='Публикация')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
-    update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    update_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
     def __str__(self):
         return self.title
 
     class Meta:
-        verbose_name = 'Главная секция'
-        verbose_name_plural = 'Главная секция'
+        verbose_name = "Нижняя галерея"
+        verbose_name_plural = "Нижняя галерея"
+
+
+# Модель для главной страницы
+class HomePage(models.Model):
+    """Модель главной страницы с мультиязычными полями"""
+    
+    # ========== СЕКЦИЯ 1: БАННЕР ==========
+    # Баннер - переводимые поля
+    banner_title = models.CharField(max_length=200, verbose_name='Заголовок баннера')
+    banner_description = models.TextField(verbose_name='Описание баннера')
+    banner_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка баннера')
+    
+    # Баннер - без перевода
+    banner_image = models.ImageField(
+        upload_to='photos/homepage/banner/%Y/%m/', 
+        blank=True, 
+        null=True,
+        verbose_name='Изображение баннера'
+    )
+    banner_video = models.FileField(
+        upload_to='files/homepage/banner/%Y/%m/', 
+        blank=True, 
+        null=True,
+        verbose_name='Видео баннера'
+    )
+    
+    # Шоурум в баннере - переводимые поля
+    banner_showroom_title = models.CharField(max_length=200, verbose_name='Заголовок шоурума')
+    banner_showroom_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка шоурума')
+    
+    # Шоурум в баннере - без перевода
+    banner_showroom_image = models.ImageField(
+        upload_to='photos/homepage/showroom/%Y/%m/', 
+        blank=True, 
+        null=True,
+        verbose_name='Изображение шоурума'
+    )
+    
+    # ========== СЕКЦИЯ 2: О НАС ==========
+    # Переводимые поля
+    about_title = models.CharField(max_length=200, verbose_name='Заголовок секции "О нас"')
+    about_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка секции "О нас"')
+    about_youtube_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на YouTube')
+    about_bottom_description = models.TextField(verbose_name='Нижнее описание секции "О нас"')
+    
+    # Карусель изображений (без перевода)
+    about_image_1 = models.ImageField(
+        upload_to='photos/homepage/about/%Y/%m/', 
+        blank=True,
+        null=True,
+        verbose_name='Изображение 1 (обязательное)'
+    )
+    about_image_2 = models.ImageField(
+        upload_to='photos/homepage/about/%Y/%m/', 
+        blank=True, 
+        null=True,
+        verbose_name='Изображение 2'
+    )
+    about_image_3 = models.ImageField(
+        upload_to='photos/homepage/about/%Y/%m/', 
+        blank=True, 
+        null=True,
+        verbose_name='Изображение 3'
+    )
+    
+    # ========== СЕКЦИЯ 3: ШОУРУМ ==========
+    # Без перевода
+    showroom_image = models.ImageField(
+        upload_to='photos/homepage/showroom_section/%Y/%m/', 
+        blank=True, 
+        null=True,
+        verbose_name='Изображение секции шоурума'
+    )
+    
+    # Переводимые поля
+    showroom_title = models.CharField(max_length=200, verbose_name='Заголовок секции шоурума')
+    showroom_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка секции шоурума')
+    
+    # ========== СЕКЦИЯ 4: ПРЕИМУЩЕСТВА (4 карточки) ==========
+    # Карточка 1
+    advantage_1_title = models.CharField(max_length=200, verbose_name='Заголовок карточки 1')
+    advantage_1_icon = models.FileField(
+        upload_to='icons/homepage/%Y/%m/', 
+        blank=True, 
+        null=True,
+        verbose_name='SVG иконка карточки 1'
+    )
+    advantage_1_description = models.TextField(verbose_name='Описание карточки 1')
+    
+    # Карточка 2
+    advantage_2_title = models.CharField(max_length=200, verbose_name='Заголовок карточки 2')
+    advantage_2_description = models.TextField(verbose_name='Описание карточки 2')
+    
+    # Карточка 3
+    advantage_3_title = models.CharField(max_length=200, verbose_name='Заголовок карточки 3')
+    advantage_3_description = models.TextField(verbose_name='Описание карточки 3')
+    
+    # Карточка 4
+    advantage_4_title = models.CharField(max_length=200, verbose_name='Заголовок карточки 4')
+    advantage_4_icon = models.FileField(
+        upload_to='icons/homepage/%Y/%m/', 
+        blank=True, 
+        null=True,
+        verbose_name='SVG иконка карточки 4'
+    )
+    advantage_4_description = models.TextField(verbose_name='Описание карточки 4')
+    
+    # ========== СЕКЦИЯ 5: ПРИЗЫВ К ДЕЙСТВИЮ ==========
+    # Переводимые поля
+    cta_title = models.CharField(max_length=200, verbose_name='Заголовок призыва к действию')
+    cta_description = models.TextField(verbose_name='Описание призыва к действию')
+    
+    # Ссылки (без перевода)
+    cta_contact_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на форму для связи')
+    cta_dealer_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на форму для становления дилера')
+    
+    # ========== СЛУЖЕБНЫЕ ПОЛЯ ==========
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+
+    def __str__(self):
+        return self.banner_title_uz if hasattr(self, 'banner_title_uz') else self.banner_title
+
+    class Meta:
+        verbose_name = 'Главная страница'
+        verbose_name_plural = 'Главная страница'
         ordering = ['-created_at']
 
 
@@ -721,15 +883,15 @@ class Region(models.Model):
                 need_update_slug = True
             elif self.pk:
                 try:
-                    old_obj = PointType.objects.get(pk=self.pk)
+                    old_obj = Region.objects.get(pk=self.pk)
                     old_name = getattr(old_obj, 'name_uz', None) or old_obj.name
                     if old_name != source_name:
                         need_update_slug = True
-                except PointType.DoesNotExist:
+                except Region.DoesNotExist:
                     need_update_slug = True
             
             if need_update_slug:
-                self.slug = generate_unique_slug(PointType, source_name, self.pk)
+                self.slug = generate_unique_slug(Region, source_name, self.pk)
         
         super().save(*args, **kwargs)
     
@@ -739,45 +901,6 @@ class Region(models.Model):
     class Meta:
         verbose_name = 'Регион'
         verbose_name_plural = 'Регионы'
-        ordering = ['order', 'name']
-
-
-class PointType(models.Model):
-    """Модель типа торговой точки"""
-    name = models.CharField(max_length=200, verbose_name='Название типа')
-    slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
-    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
-    is_published = models.BooleanField(default=True, verbose_name='Публикация')
-    
-    def save(self, *args, **kwargs):
-        # Автогенерация slug из name_uz (основной язык) или name, если name_uz не заполнен
-        source_name = getattr(self, 'name_uz', None) or self.name
-        
-        if source_name:
-            need_update_slug = False
-            
-            if not self.slug:
-                need_update_slug = True
-            elif self.pk:
-                try:
-                    old_obj = PointType.objects.get(pk=self.pk)
-                    old_name = getattr(old_obj, 'name_uz', None) or old_obj.name
-                    if old_name != source_name:
-                        need_update_slug = True
-                except PointType.DoesNotExist:
-                    need_update_slug = True
-            
-            if need_update_slug:
-                self.slug = generate_unique_slug(PointType, source_name, self.pk)
-        
-        super().save(*args, **kwargs)
-    
-    def __str__(self):
-        return self.name
-    
-    class Meta:
-        verbose_name = 'Тип точки'
-        verbose_name_plural = 'Типы точек'
         ordering = ['order', 'name']
 
 
@@ -792,14 +915,6 @@ class SalesPoint(models.Model):
     
     # Основная информация
     name = models.CharField(max_length=200, verbose_name='Название точки')
-    point_type = models.ForeignKey(
-        PointType,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='sales_points',
-        verbose_name='Тип точки'
-    )
     
     # Адрес
     address = models.TextField(verbose_name='Адрес')

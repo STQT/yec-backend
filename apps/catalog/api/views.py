@@ -24,7 +24,6 @@ from apps.catalog.models import (
     HomePage,
     MainGallery,
     News,
-    PointType,
     Region,
     Room,
     Style,
@@ -46,7 +45,6 @@ from .serializers import (
     MainGallerySerializer,
     NewsDetailSerializer,
     NewsListSerializer,
-    PointTypeSerializer,
     RegionSerializer,
     RoomSerializer,
     StyleSerializer,
@@ -149,11 +147,18 @@ class CarpetViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         queryset = super().get_queryset()
         
         # Сортировка по новым/популярным
-        sort_by = self.request.query_params.get("sort", None)
-        if sort_by == "new":
-            queryset = queryset.filter(is_new=True).order_by("-created_at")
-        elif sort_by == "popular":
-            queryset = queryset.filter(is_popular=True).order_by("-watched", "-created_at")
+        # Поддержка нескольких значений: sort=new,popular
+        sort_by_raw = self.request.query_params.get("sort")
+        if sort_by_raw:
+            sort_by = [s.strip().lower() for s in sort_by_raw.split(",") if s.strip()]
+
+            # Если выбрали одновременно "new" и "popular" — применяем оба фильтра (AND)
+            if "new" in sort_by and "popular" in sort_by:
+                queryset = queryset.filter(is_new=True, is_popular=True).order_by("-watched", "-created_at")
+            elif "new" in sort_by:
+                queryset = queryset.filter(is_new=True).order_by("-created_at")
+            elif "popular" in sort_by:
+                queryset = queryset.filter(is_popular=True).order_by("-watched", "-created_at")
         
         return queryset
 
@@ -253,18 +258,6 @@ class ColorViewSet(ListModelMixin, GenericViewSet):
         return super().list(request, *args, **kwargs)
 
 
-@extend_schema(tags=["Типы точек"])
-class PointTypeViewSet(ListModelMixin, GenericViewSet):
-    """ViewSet для типов точек"""
-    queryset = PointType.objects.filter(is_published=True)
-    serializer_class = PointTypeSerializer
-    pagination_class = None
-    
-    @extend_schema(parameters=[LANG_PARAMETER])
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
-
 @extend_schema(tags=["Новости"])
 class NewsViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     """ViewSet для новостей"""
@@ -300,16 +293,18 @@ class GalleryViewSet(ListModelMixin, GenericViewSet):
 
 @extend_schema(tags=["Нижняя галерея"])
 class MainGalleryViewSet(ListModelMixin, GenericViewSet):
-    """ViewSet для главной галереи (максимум 12 изображений)"""
-    queryset = MainGallery.objects.all().order_by('order', 'created_at')
+    """ViewSet для нижней галереи (одна запись)"""
+    queryset = MainGallery.objects.all()
     serializer_class = MainGallerySerializer
-    pagination_class = None  # Без пагинации, так как максимум 12 записей
+    pagination_class = None  # Без пагинации, так как одна запись
     
     @extend_schema(parameters=[LANG_PARAMETER])
     def list(self, request, *args, **kwargs):
-        """Возвращает все изображения галереи (максимум 12)"""
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        """Возвращает объект нижней галереи (или {} если записи нет)"""
+        instance = self.get_queryset().first()
+        if not instance:
+            return Response({})
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
 

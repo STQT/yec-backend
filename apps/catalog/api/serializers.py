@@ -18,7 +18,6 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
-    PointType,
     ProductionCapacity,
     ProductionStep,
     Region,
@@ -110,38 +109,6 @@ class ColorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Color
         fields = ["id", "name", "slug", "hex_code"]
-        read_only_fields = ["id", "slug"]
-    
-    def to_representation(self, instance):
-        """Возвращает данные на языке из query параметра lang"""
-        representation = super().to_representation(instance)
-        request = self.context.get("request")
-        
-        if request:
-            language = get_language_from_request(request)
-            
-            # Всегда используем языковые поля, если они доступны
-            lang_suffix = f"_{language}" if language else ""
-            lang_field = f"name{lang_suffix}"
-            
-            if hasattr(instance, lang_field):
-                lang_value = getattr(instance, lang_field, None)
-                if lang_value:
-                    representation["name"] = lang_value
-                elif not representation.get("name"):
-                    representation["name"] = instance.name
-            else:
-                representation["name"] = instance.name
-        
-        return representation
-
-
-class PointTypeSerializer(serializers.ModelSerializer):
-    """Сериализатор для типов точек"""
-
-    class Meta:
-        model = PointType
-        fields = ["id", "name", "slug"]
         read_only_fields = ["id", "slug"]
     
     def to_representation(self, instance):
@@ -577,36 +544,122 @@ class GallerySerializer(serializers.ModelSerializer):
 
 
 class MainGallerySerializer(serializers.ModelSerializer):
-    """Сериализатор для главной галереи"""
-    image = ImageFieldSerializer(required=False, allow_null=True)
+    """Сериализатор для нижней галереи (одна запись)"""
+    image_1 = ImageFieldSerializer(required=False, allow_null=True)
+    image_2 = ImageFieldSerializer(required=False, allow_null=True)
+    image_3 = ImageFieldSerializer(required=False, allow_null=True)
+    image_4 = ImageFieldSerializer(required=False, allow_null=True)
+    image_5 = ImageFieldSerializer(required=False, allow_null=True)
+    image_6 = ImageFieldSerializer(required=False, allow_null=True)
+    image_7 = ImageFieldSerializer(required=False, allow_null=True)
+    image_8 = ImageFieldSerializer(required=False, allow_null=True)
+    image_9 = ImageFieldSerializer(required=False, allow_null=True)
+    image_10 = ImageFieldSerializer(required=False, allow_null=True)
+    image_11 = ImageFieldSerializer(required=False, allow_null=True)
+    image_12 = ImageFieldSerializer(required=False, allow_null=True)
 
     class Meta:
         model = MainGallery
         fields = [
             "id",
-            "image",
-            "order",
+            "title",
+            "image_1",
+            "image_2",
+            "image_3",
+            "image_4",
+            "image_5",
+            "image_6",
+            "image_7",
+            "image_8",
+            "image_9",
+            "image_10",
+            "image_11",
+            "image_12",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
 
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+
+        if request:
+            language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"title{lang_suffix}"
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["title"] = lang_value
+                elif not representation.get("title"):
+                    representation["title"] = instance.title
+            else:
+                representation["title"] = instance.title
+
+        return representation
+
 
 class HomePageSerializer(serializers.ModelSerializer):
     """Сериализатор для главной страницы с поддержкой мультиязычности"""
-    image = ImageFieldSerializer(required=False, allow_null=True)
-    video = serializers.FileField(required=False, allow_null=True)
+    # Секция 1: Баннер
+    banner_image = ImageFieldSerializer(required=False, allow_null=True)
+    banner_video = serializers.FileField(required=False, allow_null=True)
+    banner_showroom_image = ImageFieldSerializer(required=False, allow_null=True)
+    
+    # Секция 2: О нас
+    about_image_1 = ImageFieldSerializer(required=False, allow_null=True)
+    about_image_2 = ImageFieldSerializer(required=False, allow_null=True)
+    about_image_3 = ImageFieldSerializer(required=False, allow_null=True)
+    
+    # Секция 3: Шоурум
+    showroom_image = ImageFieldSerializer(required=False, allow_null=True)
+    
+    # Секция 4: Преимущества
+    advantage_1_icon = serializers.FileField(required=False, allow_null=True)
+    advantage_4_icon = serializers.FileField(required=False, allow_null=True)
     
     class Meta:
         model = HomePage
         fields = [
             "id",
-            "image",
-            "video",
-            "title",
-            "description",
-            "collection_link",
+            # Секция 1: Баннер
+            "banner_title",
+            "banner_description",
+            "banner_link",
+            "banner_image",
+            "banner_video",
+            "banner_showroom_title",
+            "banner_showroom_image",
+            "banner_showroom_link",
+            # Секция 2: О нас
+            "about_title",
+            "about_link",
+            "about_youtube_link",
+            "about_bottom_description",
+            "about_image_1",
+            "about_image_2",
+            "about_image_3",
+            # Секция 3: Шоурум
+            "showroom_image",
             "showroom_title",
             "showroom_link",
+            # Секция 4: Преимущества
+            "advantage_1_title",
+            "advantage_1_icon",
+            "advantage_1_description",
+            "advantage_2_title",
+            "advantage_2_description",
+            "advantage_3_title",
+            "advantage_3_description",
+            "advantage_4_title",
+            "advantage_4_icon",
+            "advantage_4_description",
+            # Секция 5: Призыв к действию
+            "cta_title",
+            "cta_description",
+            "cta_contact_link",
+            "cta_dealer_link",
         ]
         read_only_fields = ["id"]
 
@@ -618,14 +671,58 @@ class HomePageSerializer(serializers.ModelSerializer):
         if request:
             # Получаем язык из query параметра
             language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
             
-            # Получаем переведенные поля
-            if language and language != "uz":  # uz - язык по умолчанию
-                representation["title"] = getattr(instance, f"title_{language}", instance.title)
-                representation["description"] = getattr(instance, f"description_{language}", instance.description)
-                representation["collection_link"] = getattr(instance, f"collection_link_{language}", instance.collection_link)
-                representation["showroom_title"] = getattr(instance, f"showroom_title_{language}", instance.showroom_title)
-                representation["showroom_link"] = getattr(instance, f"showroom_link_{language}", instance.showroom_link)
+            # Секция 1: Баннер
+            multilingual_fields_banner = [
+                'banner_title', 'banner_description', 'banner_link',
+                'banner_showroom_title', 'banner_showroom_link'
+            ]
+            for field in multilingual_fields_banner:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+            
+            # Секция 2: О нас
+            multilingual_fields_about = [
+                'about_title', 'about_link', 'about_youtube_link', 'about_bottom_description'
+            ]
+            for field in multilingual_fields_about:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+            
+            # Секция 3: Шоурум
+            multilingual_fields_showroom = ['showroom_title', 'showroom_link']
+            for field in multilingual_fields_showroom:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+            
+            # Секция 4: Преимущества
+            for i in range(1, 5):
+                for subfield in ['title', 'description']:
+                    field = f"advantage_{i}_{subfield}"
+                    lang_field = f"{field}{lang_suffix}"
+                    if hasattr(instance, lang_field):
+                        value = getattr(instance, lang_field)
+                        if value:
+                            representation[field] = value
+            
+            # Секция 5: Призыв к действию
+            multilingual_fields_cta = ['cta_title', 'cta_description']
+            for field in multilingual_fields_cta:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
         
         return representation
 
@@ -891,14 +988,12 @@ class ContactPageSerializer(serializers.ModelSerializer):
 
 class SalesPointSerializer(serializers.ModelSerializer):
     """Сериализатор для торговой точки"""
-    point_type = PointTypeSerializer(read_only=True)
     
     class Meta:
         model = SalesPoint
         fields = [
             "id",
             "name",
-            "point_type",
             "address",
             "location",
             "phone",
@@ -947,19 +1042,9 @@ class RegionSerializer(serializers.ModelSerializer):
             
             data = []
             for point in points:
-                point_type_data = None
-                if point.point_type:
-                    point_type_name = getattr(point.point_type, f"name_{language}", point.point_type.name) if language != "uz" else point.point_type.name
-                    point_type_data = {
-                        "id": point.point_type.id,
-                        "name": point_type_name,
-                        "slug": point.point_type.slug,
-                    }
-                
                 item = {
                     "id": point.id,
                     "name": getattr(point, f"name_{language}", point.name) if language != "uz" else point.name,
-                    "point_type": point_type_data,
                     "address": getattr(point, f"address_{language}", point.address) if language != "uz" else point.address,
                     "location": getattr(point, f"location_{language}", point.location) if language != "uz" else point.location,
                     "phone": point.phone,

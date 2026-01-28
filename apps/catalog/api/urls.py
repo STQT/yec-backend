@@ -14,7 +14,6 @@ from .views import (
     HomePageViewSet,
     MainGalleryViewSet,
     NewsViewSet,
-    PointTypeViewSet,
     RegionViewSet,
     RoomViewSet,
     StyleViewSet,
@@ -26,7 +25,6 @@ router.register("collections", CollectionViewSet, basename="collection")
 router.register("styles", StyleViewSet, basename="style")
 router.register("rooms", RoomViewSet, basename="room")
 router.register("colors", ColorViewSet, basename="color")
-router.register("point-types", PointTypeViewSet, basename="point-type")
 router.register("news", NewsViewSet, basename="news")
 router.register("gallery", GalleryViewSet, basename="gallery")
 router.register("main-gallery", MainGalleryViewSet, basename="main-gallery")
