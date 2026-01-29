@@ -47,6 +47,9 @@ class HomePageTranslationOptions(TranslationOptions):
         'advantage_3_description',
         'advantage_4_title',
         'advantage_4_description',
+        # Секция 5: Призыв к действию
+        'cta_title',
+        'cta_description',
         # SEO поля
         'meta_title',
         'meta_description',

@@ -616,6 +616,7 @@ class HomePageAdmin(admin.ModelAdmin):
         "banner_image_preview",
         "banner_showroom_image_preview",
         "showroom_image_preview",
+        "cta_image_preview",
         "og_image_preview",
         "created_at",
         "update_at"
@@ -717,7 +718,20 @@ class HomePageAdmin(admin.ModelAdmin):
                 "advantage_4_description_en",
             )
         }),
-        # ========== ТАБ 5: SEO ==========
+        # ========== ТАБ 5: ПРИЗЫВ К ДЕЙСТВИЮ ==========
+        ("Призыв к действию", {
+            "fields": (
+                "cta_title_uz",
+                "cta_title_ru",
+                "cta_title_en",
+                "cta_description_uz",
+                "cta_description_ru",
+                "cta_description_en",
+                "cta_image",
+                "cta_image_preview",
+            )
+        }),
+        # ========== ТАБ 6: SEO ==========
         ("SEO", {
             "fields": (
                 "meta_title_uz",
@@ -805,6 +819,16 @@ class HomePageAdmin(admin.ModelAdmin):
             )
         return "-"
     showroom_image_preview.short_description = "Превью изображения шоурума"
+    
+    def cta_image_preview(self, obj):
+        """Превью изображения призыва к действию"""
+        if obj and obj.cta_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.cta_image.url
+            )
+        return "-"
+    cta_image_preview.short_description = "Превью изображения"
     
     def og_image_preview(self, obj):
         """Превью OG изображения"""

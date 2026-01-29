@@ -630,6 +630,19 @@ class HomePage(models.Model):
     )
     advantage_4_description = models.TextField(verbose_name='Описание карточки 4')
     
+    # ========== СЕКЦИЯ 5: ПРИЗЫВ К ДЕЙСТВИЮ ==========
+    # Переводимые поля
+    cta_title = models.CharField(max_length=200, verbose_name='Заголовок призыва к действию')
+    cta_description = models.TextField(verbose_name='Описание призыва к действию')
+    
+    # Изображение (без перевода)
+    cta_image = models.ImageField(
+        upload_to='photos/homepage/cta/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение призыва к действию'
+    )
+    
     # ========== SEO ПОЛЯ ==========
     # Meta теги (переводимые)
     meta_title = models.CharField(
