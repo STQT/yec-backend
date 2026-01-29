@@ -700,10 +700,10 @@ class ProductionStepSerializer(serializers.ModelSerializer):
 
 class CompanyHistorySerializer(serializers.ModelSerializer):
     """Сериализатор для истории компании"""
-
+    image = ImageFieldSerializer(required=False, allow_null=True)
     class Meta:
         model = CompanyHistory
-        fields = ["id", "year", "year_title", "year_description"]
+        fields = ["id", "year", "year_title", "year_description", "image"]
         read_only_fields = ["id"]
     
     def to_representation(self, instance):

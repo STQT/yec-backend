@@ -617,6 +617,7 @@ class HomePageAdmin(admin.ModelAdmin):
         "banner_showroom_image_preview",
         "showroom_image_preview",
         "cta_image_preview",
+        "og_image_preview",
         "created_at",
         "update_at"
     ]
@@ -733,6 +734,32 @@ class HomePageAdmin(admin.ModelAdmin):
                 "cta_dealer_link_en",
             )
         }),
+        # ========== ТАБ 6: SEO ==========
+        ("SEO", {
+            "fields": (
+                "meta_title_uz",
+                "meta_title_ru",
+                "meta_title_en",
+                "meta_description_uz",
+                "meta_description_ru",
+                "meta_description_en",
+                "meta_keywords_uz",
+                "meta_keywords_ru",
+                "meta_keywords_en",
+                "og_title_uz",
+                "og_title_ru",
+                "og_title_en",
+                "og_description_uz",
+                "og_description_ru",
+                "og_description_en",
+                "og_image",
+                "og_image_preview",
+                "canonical_url_uz",
+                "canonical_url_ru",
+                "canonical_url_en",
+            ),
+            "description": "Настройки для поисковых систем и социальных сетей"
+        }),
         # ========== НАСТРОЙКИ ==========
         ("Настройки", {
             "fields": ("is_published", "created_at", "update_at"),
@@ -805,6 +832,16 @@ class HomePageAdmin(admin.ModelAdmin):
             )
         return "-"
     showroom_image_preview.short_description = "Превью изображения шоурума"
+    
+    def og_image_preview(self, obj):
+        """Превью OG изображения"""
+        if obj and obj.og_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.og_image.url
+            )
+        return "-"
+    og_image_preview.short_description = "Превью OG изображения"
 
 
 class ProductionStepInline(admin.StackedInline):
@@ -836,10 +873,23 @@ class CompanyHistoryInline(admin.StackedInline):
         "year_description_uz",
         "year_description_ru",
         "year_description_en",
+        "image",
+        "image_preview",
     ]
+    readonly_fields = ["image_preview"]
     ordering = ["year"]
     verbose_name = "Событие истории"
     verbose_name_plural = "События истории"
+    
+    def image_preview(self, obj):
+        """Превью изображения"""
+        if obj and obj.image:
+            return format_html(
+                '<img src="{}" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image.url
+            )
+        return "-"
+    image_preview.short_description = "Превью"
 
 
 @admin.register(AboutPage)
@@ -856,6 +906,7 @@ class AboutPageAdmin(admin.ModelAdmin):
         "capacity_card_2_image_preview",
         "capacity_card_3_image_preview",
         "capacity_card_4_image_preview",
+        "og_image_preview",
         "created_at",
         "update_at"
     ]
@@ -978,6 +1029,32 @@ class AboutPageAdmin(admin.ModelAdmin):
                 "dealer_card_3_description_en",
             )
         }),
+        # ========== СЕКЦИЯ 6: SEO ==========
+        ("SEO", {
+            "fields": (
+                "meta_title_uz",
+                "meta_title_ru",
+                "meta_title_en",
+                "meta_description_uz",
+                "meta_description_ru",
+                "meta_description_en",
+                "meta_keywords_uz",
+                "meta_keywords_ru",
+                "meta_keywords_en",
+                "og_title_uz",
+                "og_title_ru",
+                "og_title_en",
+                "og_description_uz",
+                "og_description_ru",
+                "og_description_en",
+                "og_image",
+                "og_image_preview",
+                "canonical_url_uz",
+                "canonical_url_ru",
+                "canonical_url_en",
+            ),
+            "description": "Настройки для поисковых систем и социальных сетей"
+        }),
         # ========== НАСТРОЙКИ ==========
         ("Настройки", {
             "fields": ("is_published", "created_at", "update_at")
@@ -1069,6 +1146,16 @@ class AboutPageAdmin(admin.ModelAdmin):
             )
         return "-"
     capacity_card_4_image_preview.short_description = "Превью изображения карточки 4"
+    
+    def og_image_preview(self, obj):
+        """Превью OG изображения"""
+        if obj and obj.og_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.og_image.url
+            )
+        return "-"
+    og_image_preview.short_description = "Превью OG изображения"
 
 
 @admin.register(ContactPage)
@@ -1078,7 +1165,7 @@ class ContactPageAdmin(admin.ModelAdmin):
     list_display_links = ["page_title_preview"]
     list_filter = ["is_published", "created_at"]
     search_fields = ["page_title_uz", "page_title_ru", "page_title_en", "address_uz", "phone", "email"]
-    readonly_fields = ["created_at", "update_at"]
+    readonly_fields = ["og_image_preview", "created_at", "update_at"]
     
     fieldsets = (
         ("Заголовок страницы", {
@@ -1132,6 +1219,31 @@ class ContactPageAdmin(admin.ModelAdmin):
             "fields": ("facebook_url", "twitter_url", "linkedin_url", "instagram_url"),
             "classes": ("collapse",)
         }),
+        ("SEO", {
+            "fields": (
+                "meta_title_uz",
+                "meta_title_ru",
+                "meta_title_en",
+                "meta_description_uz",
+                "meta_description_ru",
+                "meta_description_en",
+                "meta_keywords_uz",
+                "meta_keywords_ru",
+                "meta_keywords_en",
+                "og_title_uz",
+                "og_title_ru",
+                "og_title_en",
+                "og_description_uz",
+                "og_description_ru",
+                "og_description_en",
+                "og_image",
+                "og_image_preview",
+                "canonical_url_uz",
+                "canonical_url_ru",
+                "canonical_url_en",
+            ),
+            "description": "Настройки для поисковых систем и социальных сетей"
+        }),
         ("Настройки и даты", {
             "fields": ("is_published", "created_at", "update_at")
         }),
@@ -1162,6 +1274,16 @@ class ContactPageAdmin(admin.ModelAdmin):
             return obj.page_title_uz if hasattr(obj, 'page_title_uz') else obj.page_title
         return "-"
     page_title_preview.short_description = "Заголовок"
+    
+    def og_image_preview(self, obj):
+        """Превью OG изображения"""
+        if obj and obj.og_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.og_image.url
+            )
+        return "-"
+    og_image_preview.short_description = "Превью OG изображения"
 
 
 class SalesPointInline(admin.StackedInline):

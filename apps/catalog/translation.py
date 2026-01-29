@@ -51,6 +51,13 @@ class HomePageTranslationOptions(TranslationOptions):
         'cta_description',
         'cta_contact_link',
         'cta_dealer_link',
+        # SEO поля
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'og_title',
+        'og_description',
+        'canonical_url',
     )
     required_languages = ('uz',)  # Узбекский обязателен
 
@@ -95,6 +102,13 @@ class AboutPageTranslationOptions(TranslationOptions):
         'dealer_card_2_description',
         'dealer_card_3_title',
         'dealer_card_3_description',
+        # SEO поля
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'og_title',
+        'og_description',
+        'canonical_url',
     )
     required_languages = ('uz',)
 
@@ -134,6 +148,13 @@ class ContactPageTranslationOptions(TranslationOptions):
         'email_label',
         'form_title',
         'form_description',
+        # SEO поля
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'og_title',
+        'og_description',
+        'canonical_url',
     )
     required_languages = ('uz',)
 

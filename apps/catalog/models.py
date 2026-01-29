@@ -80,6 +80,12 @@ class CompanyHistory(models.Model):
     year = models.PositiveIntegerField(verbose_name='Год')
     year_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Название года')
     year_description = models.TextField(blank=True, null=True, verbose_name='Описание года')
+    image = models.ImageField(
+        upload_to='photos/company_history/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение'
+    )
     
     def __str__(self):
         return f"{self.year} - {self.year_title}"
@@ -640,6 +646,64 @@ class HomePage(models.Model):
     cta_contact_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на форму для связи')
     cta_dealer_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на форму для становления дилера')
     
+    # ========== SEO ПОЛЯ ==========
+    # Meta теги (переводимые)
+    meta_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='Meta Title',
+        help_text='Заголовок страницы для поисковых систем (рекомендуется до 60 символов)'
+    )
+    meta_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='Meta Description',
+        help_text='Описание страницы для поисковых систем (рекомендуется до 160 символов)'
+    )
+    meta_keywords = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='Meta Keywords',
+        help_text='Ключевые слова через запятую'
+    )
+    
+    # Open Graph теги (переводимые)
+    og_title = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='OG Title',
+        help_text='Заголовок для социальных сетей (Facebook, Twitter и т.д.)'
+    )
+    og_description = models.TextField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name='OG Description',
+        help_text='Описание для социальных сетей'
+    )
+    
+    # Open Graph изображение (без перевода)
+    og_image = models.ImageField(
+        upload_to='photos/seo/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='OG Image',
+        help_text='Изображение для социальных сетей (рекомендуется 1200x630px)'
+    )
+    
+    # Canonical URL (переводимый)
+    canonical_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name='Canonical URL',
+        help_text='Канонический URL страницы (опционально)'
+    )
+    
     # ========== СЛУЖЕБНЫЕ ПОЛЯ ==========
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
@@ -750,6 +814,64 @@ class AboutPage(models.Model):
     dealer_card_3_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок карточки 3')
     dealer_card_3_description = models.TextField(blank=True, null=True, verbose_name='Описание карточки 3')
     
+    # ========== SEO ПОЛЯ ==========
+    # Meta теги (переводимые)
+    meta_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='Meta Title',
+        help_text='Заголовок страницы для поисковых систем (рекомендуется до 60 символов)'
+    )
+    meta_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='Meta Description',
+        help_text='Описание страницы для поисковых систем (рекомендуется до 160 символов)'
+    )
+    meta_keywords = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='Meta Keywords',
+        help_text='Ключевые слова через запятую'
+    )
+    
+    # Open Graph теги (переводимые)
+    og_title = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='OG Title',
+        help_text='Заголовок для социальных сетей (Facebook, Twitter и т.д.)'
+    )
+    og_description = models.TextField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name='OG Description',
+        help_text='Описание для социальных сетей'
+    )
+    
+    # Open Graph изображение (без перевода)
+    og_image = models.ImageField(
+        upload_to='photos/seo/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='OG Image',
+        help_text='Изображение для социальных сетей (рекомендуется 1200x630px)'
+    )
+    
+    # Canonical URL (переводимый)
+    canonical_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name='Canonical URL',
+        help_text='Канонический URL страницы (опционально)'
+    )
+    
     # ========== СЛУЖЕБНЫЕ ПОЛЯ ==========
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
@@ -807,6 +929,64 @@ class ContactPage(models.Model):
     twitter_url = models.URLField(blank=True, null=True, verbose_name='Twitter')
     linkedin_url = models.URLField(blank=True, null=True, verbose_name='LinkedIn')
     instagram_url = models.URLField(blank=True, null=True, verbose_name='Instagram')
+    
+    # ========== SEO ПОЛЯ ==========
+    # Meta теги (переводимые)
+    meta_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='Meta Title',
+        help_text='Заголовок страницы для поисковых систем (рекомендуется до 60 символов)'
+    )
+    meta_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='Meta Description',
+        help_text='Описание страницы для поисковых систем (рекомендуется до 160 символов)'
+    )
+    meta_keywords = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='Meta Keywords',
+        help_text='Ключевые слова через запятую'
+    )
+    
+    # Open Graph теги (переводимые)
+    og_title = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='OG Title',
+        help_text='Заголовок для социальных сетей (Facebook, Twitter и т.д.)'
+    )
+    og_description = models.TextField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name='OG Description',
+        help_text='Описание для социальных сетей'
+    )
+    
+    # Open Graph изображение (без перевода)
+    og_image = models.ImageField(
+        upload_to='photos/seo/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='OG Image',
+        help_text='Изображение для социальных сетей (рекомендуется 1200x630px)'
+    )
+    
+    # Canonical URL (переводимый)
+    canonical_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name='Canonical URL',
+        help_text='Канонический URL страницы (опционально)'
+    )
     
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
