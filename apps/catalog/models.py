@@ -609,6 +609,30 @@ class MainGallery(models.Model):
         verbose_name_plural = "Нижняя галерея"
 
 
+# Модель для изображений секции "О нас" главной страницы
+class AboutImage(models.Model):
+    """Изображения для секции 'О нас' на главной странице"""
+    homepage = models.ForeignKey(
+        'HomePage',
+        on_delete=models.CASCADE,
+        related_name='about_images',
+        verbose_name='Главная страница'
+    )
+    image = models.ImageField(
+        upload_to='photos/homepage/about/%Y/%m/',
+        verbose_name='Изображение'
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    
+    def __str__(self):
+        return f"Изображение {self.order} для секции 'О нас'"
+    
+    class Meta:
+        verbose_name = 'Изображение секции "О нас"'
+        verbose_name_plural = 'Изображения секции "О нас"'
+        ordering = ['order']
+
+
 # Модель для главной страницы
 class HomePage(models.Model):
     """Модель главной страницы с мультиязычными полями"""
@@ -652,26 +676,6 @@ class HomePage(models.Model):
     about_youtube_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на YouTube')
     about_bottom_description = models.TextField(verbose_name='Нижнее описание секции "О нас"')
     
-    # Карусель изображений (без перевода)
-    about_image_1 = models.ImageField(
-        upload_to='photos/homepage/about/%Y/%m/', 
-        blank=True,
-        null=True,
-        verbose_name='Изображение 1 (обязательное)'
-    )
-    about_image_2 = models.ImageField(
-        upload_to='photos/homepage/about/%Y/%m/', 
-        blank=True, 
-        null=True,
-        verbose_name='Изображение 2'
-    )
-    about_image_3 = models.ImageField(
-        upload_to='photos/homepage/about/%Y/%m/', 
-        blank=True, 
-        null=True,
-        verbose_name='Изображение 3'
-    )
-    
     # ========== СЕКЦИЯ 3: ШОУРУМ ==========
     # Без перевода
     showroom_image = models.ImageField(
@@ -683,9 +687,12 @@ class HomePage(models.Model):
     
     # Переводимые поля
     showroom_title = models.CharField(max_length=200, verbose_name='Заголовок секции шоурума')
-    showroom_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка секции шоурума')
     
     # ========== СЕКЦИЯ 4: ПРЕИМУЩЕСТВА (4 карточки) ==========
+    # Общие поля секции (переводимые)
+    advantage_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок секции преимуществ')
+    advantage_subtitle = models.CharField(max_length=200, blank=True, null=True, verbose_name='Подзаголовок секции преимуществ')
+    
     # Карточка 1
     advantage_1_title = models.CharField(max_length=200, verbose_name='Заголовок карточки 1')
     advantage_1_icon = models.FileField(
@@ -718,6 +725,14 @@ class HomePage(models.Model):
     # Переводимые поля
     cta_title = models.CharField(max_length=200, verbose_name='Заголовок призыва к действию')
     cta_description = models.TextField(verbose_name='Описание призыва к действию')
+    
+    # Изображение (без перевода)
+    cta_image = models.ImageField(
+        upload_to='photos/homepage/cta/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение призыва к действию'
+    )
     
     # Ссылки (без перевода)
     cta_contact_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на форму для связи')

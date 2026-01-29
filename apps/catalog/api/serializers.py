@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.catalog.models import (
+    AboutImage,
     AboutPage,
     AdvantageCard,
     Carpet,
@@ -600,6 +601,16 @@ class MainGallerySerializer(serializers.ModelSerializer):
         return representation
 
 
+class AboutImageSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображений секции 'О нас'"""
+    image = ImageFieldSerializer(required=False, allow_null=True)
+    
+    class Meta:
+        model = AboutImage
+        fields = ["id", "image", "order"]
+        read_only_fields = ["id"]
+
+
 class HomePageSerializer(serializers.ModelSerializer):
     """Сериализатор для главной страницы с поддержкой мультиязычности"""
     # Секция 1: Баннер
@@ -608,9 +619,7 @@ class HomePageSerializer(serializers.ModelSerializer):
     banner_showroom_image = ImageFieldSerializer(required=False, allow_null=True)
     
     # Секция 2: О нас
-    about_image_1 = ImageFieldSerializer(required=False, allow_null=True)
-    about_image_2 = ImageFieldSerializer(required=False, allow_null=True)
-    about_image_3 = ImageFieldSerializer(required=False, allow_null=True)
+    about_images = serializers.SerializerMethodField()
     
     # Секция 3: Шоурум
     showroom_image = ImageFieldSerializer(required=False, allow_null=True)
@@ -618,6 +627,9 @@ class HomePageSerializer(serializers.ModelSerializer):
     # Секция 4: Преимущества
     advantage_1_icon = serializers.FileField(required=False, allow_null=True)
     advantage_4_icon = serializers.FileField(required=False, allow_null=True)
+    
+    # Секция 5: Призыв к действию
+    cta_image = ImageFieldSerializer(required=False, allow_null=True)
     
     class Meta:
         model = HomePage
@@ -637,14 +649,13 @@ class HomePageSerializer(serializers.ModelSerializer):
             "about_link",
             "about_youtube_link",
             "about_bottom_description",
-            "about_image_1",
-            "about_image_2",
-            "about_image_3",
+            "about_images",
             # Секция 3: Шоурум
             "showroom_image",
             "showroom_title",
-            "showroom_link",
             # Секция 4: Преимущества
+            "advantage_title",
+            "advantage_subtitle",
             "advantage_1_title",
             "advantage_1_icon",
             "advantage_1_description",
@@ -658,10 +669,16 @@ class HomePageSerializer(serializers.ModelSerializer):
             # Секция 5: Призыв к действию
             "cta_title",
             "cta_description",
+            "cta_image",
             "cta_contact_link",
             "cta_dealer_link",
         ]
         read_only_fields = ["id"]
+    
+    def get_about_images(self, obj):
+        """Получить список изображений секции 'О нас'"""
+        images = obj.about_images.all().order_by('order')
+        return AboutImageSerializer(images, many=True, context=self.context).data
 
     def to_representation(self, instance):
         """Возвращает данные на языке из query параметра lang"""
@@ -697,7 +714,7 @@ class HomePageSerializer(serializers.ModelSerializer):
                         representation[field] = value
             
             # Секция 3: Шоурум
-            multilingual_fields_showroom = ['showroom_title', 'showroom_link']
+            multilingual_fields_showroom = ['showroom_title']
             for field in multilingual_fields_showroom:
                 lang_field = f"{field}{lang_suffix}"
                 if hasattr(instance, lang_field):
@@ -706,6 +723,16 @@ class HomePageSerializer(serializers.ModelSerializer):
                         representation[field] = value
             
             # Секция 4: Преимущества
+            # Общие поля секции
+            multilingual_fields_advantage_section = ['advantage_title', 'advantage_subtitle']
+            for field in multilingual_fields_advantage_section:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+            
+            # Поля карточек
             for i in range(1, 5):
                 for subfield in ['title', 'description']:
                     field = f"advantage_{i}_{subfield}"

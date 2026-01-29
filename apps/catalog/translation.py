@@ -40,8 +40,9 @@ class HomePageTranslationOptions(TranslationOptions):
         'about_bottom_description',
         # Секция 3: Шоурум
         'showroom_title',
-        'showroom_link',
         # Секция 4: Преимущества
+        'advantage_title',
+        'advantage_subtitle',
         'advantage_1_title',
         'advantage_1_description',
         'advantage_2_title',

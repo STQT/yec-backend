@@ -5,6 +5,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from apps.catalog.models import (
+    AboutImage,
     AboutPage,
     AdvantageCard,
     Carpet,
@@ -672,9 +673,29 @@ class MainGalleryAdmin(admin.ModelAdmin):
     image_12_preview.short_description = "Превью изображения 12"
 
 
+class AboutImageInline(admin.StackedInline):
+    """Inline для изображений секции 'О нас'"""
+    model = AboutImage
+    extra = 1
+    fields = ["image", "order", "image_preview"]
+    readonly_fields = ["image_preview"]
+    ordering = ["order"]
+    
+    def image_preview(self, obj):
+        """Превью изображения"""
+        if obj and obj.image:
+            return format_html(
+                '<img src="{}" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image.url
+            )
+        return "-"
+    image_preview.short_description = "Превью"
+
+
 @admin.register(HomePage)
 class HomePageAdmin(admin.ModelAdmin):
     """Админка для главной страницы с табами"""
+    inlines = [AboutImageInline]
     list_display = ["banner_title_preview", "is_published", "created_at"]
     list_display_links = ["banner_title_preview"]
     list_filter = ["is_published", "created_at"]
@@ -682,10 +703,8 @@ class HomePageAdmin(admin.ModelAdmin):
     readonly_fields = [
         "banner_image_preview",
         "banner_showroom_image_preview",
-        "about_image_1_preview",
-        "about_image_2_preview",
-        "about_image_3_preview",
         "showroom_image_preview",
+        "cta_image_preview",
         "created_at",
         "update_at"
     ]
@@ -732,12 +751,6 @@ class HomePageAdmin(admin.ModelAdmin):
                 "about_bottom_description_uz",
                 "about_bottom_description_ru",
                 "about_bottom_description_en",
-                "about_image_1",
-                "about_image_1_preview",
-                "about_image_2",
-                "about_image_2_preview",
-                "about_image_3",
-                "about_image_3_preview",
             )
         }),
         # ========== ТАБ 3: ШОУРУМ ==========
@@ -748,14 +761,18 @@ class HomePageAdmin(admin.ModelAdmin):
                 "showroom_title_uz",
                 "showroom_title_ru",
                 "showroom_title_en",
-                "showroom_link_uz",
-                "showroom_link_ru",
-                "showroom_link_en",
             )
         }),
         # ========== ТАБ 4: ПРЕИМУЩЕСТВА ==========
         ("Преимущества", {
             "fields": (
+                # Общие поля секции
+                "advantage_title_uz",
+                "advantage_title_ru",
+                "advantage_title_en",
+                "advantage_subtitle_uz",
+                "advantage_subtitle_ru",
+                "advantage_subtitle_en",
                 # Карточка 1
                 "advantage_1_title_uz",
                 "advantage_1_title_ru",
@@ -797,6 +814,8 @@ class HomePageAdmin(admin.ModelAdmin):
                 "cta_description_uz",
                 "cta_description_ru",
                 "cta_description_en",
+                "cta_image",
+                "cta_image_preview",
                 "cta_contact_link",
                 "cta_dealer_link",
             )
@@ -854,35 +873,15 @@ class HomePageAdmin(admin.ModelAdmin):
         return "-"
     banner_showroom_image_preview.short_description = "Превью изображения шоурума"
     
-    def about_image_1_preview(self, obj):
-        """Превью первого изображения секции 'О нас'"""
-        if obj and obj.about_image_1:
+    def cta_image_preview(self, obj):
+        """Превью изображения призыва к действию"""
+        if obj and obj.cta_image:
             return format_html(
                 '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
-                obj.about_image_1.url
+                obj.cta_image.url
             )
         return "-"
-    about_image_1_preview.short_description = "Превью изображения 1"
-    
-    def about_image_2_preview(self, obj):
-        """Превью второго изображения секции 'О нас'"""
-        if obj and obj.about_image_2:
-            return format_html(
-                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
-                obj.about_image_2.url
-            )
-        return "-"
-    about_image_2_preview.short_description = "Превью изображения 2"
-    
-    def about_image_3_preview(self, obj):
-        """Превью третьего изображения секции 'О нас'"""
-        if obj and obj.about_image_3:
-            return format_html(
-                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
-                obj.about_image_3.url
-            )
-        return "-"
-    about_image_3_preview.short_description = "Превью изображения 3"
+    cta_image_preview.short_description = "Превью изображения"
     
     def showroom_image_preview(self, obj):
         """Превью изображения секции шоурума"""
