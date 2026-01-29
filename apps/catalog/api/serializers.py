@@ -743,7 +743,7 @@ class HomePageSerializer(serializers.ModelSerializer):
                             representation[field] = value
             
             # Секция 5: Призыв к действию
-            multilingual_fields_cta = ['cta_title', 'cta_description']
+            multilingual_fields_cta = ['cta_title', 'cta_description', 'cta_contact_link', 'cta_dealer_link']
             for field in multilingual_fields_cta:
                 lang_field = f"{field}{lang_suffix}"
                 if hasattr(instance, lang_field):

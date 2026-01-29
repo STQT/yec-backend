@@ -54,6 +54,8 @@ class HomePageTranslationOptions(TranslationOptions):
         # Секция 5: Призыв к действию
         'cta_title',
         'cta_description',
+        'cta_contact_link',
+        'cta_dealer_link',
     )
     required_languages = ('uz',)  # Узбекский обязателен
 

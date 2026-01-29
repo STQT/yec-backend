@@ -734,7 +734,7 @@ class HomePage(models.Model):
         verbose_name='Изображение призыва к действию'
     )
     
-    # Ссылки (без перевода)
+    # Ссылки (переводимые)
     cta_contact_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на форму для связи')
     cta_dealer_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на форму для становления дилера')
     

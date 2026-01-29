@@ -816,8 +816,12 @@ class HomePageAdmin(admin.ModelAdmin):
                 "cta_description_en",
                 "cta_image",
                 "cta_image_preview",
-                "cta_contact_link",
-                "cta_dealer_link",
+                "cta_contact_link_uz",
+                "cta_contact_link_ru",
+                "cta_contact_link_en",
+                "cta_dealer_link_uz",
+                "cta_dealer_link_ru",
+                "cta_dealer_link_en",
             )
         }),
         # ========== НАСТРОЙКИ ==========
@@ -1031,6 +1035,25 @@ class AboutPageAdmin(admin.ModelAdmin):
             "fields": ("is_published", "created_at", "update_at")
         }),
     )
+    
+    def changelist_view(self, request, extra_context=None):
+        """Перенаправляем на форму редактирования, если есть запись, или на создание"""
+        obj = AboutPage.objects.first()
+        if obj:
+            return HttpResponseRedirect(
+                reverse('admin:catalog_aboutpage_change', args=[obj.pk])
+            )
+        return HttpResponseRedirect(
+            reverse('admin:catalog_aboutpage_add')
+        )
+    
+    def has_add_permission(self, request):
+        """Разрешаем добавление только если нет записей"""
+        return AboutPage.objects.count() == 0
+    
+    def has_delete_permission(self, request, obj=None):
+        """Запрещаем удаление, так как должна быть только одна запись"""
+        return False
 
     def main_image_preview(self, obj):
         """Превью главного изображения"""
