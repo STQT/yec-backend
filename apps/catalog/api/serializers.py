@@ -16,8 +16,6 @@ from apps.catalog.models import (
     HomePage,
     MainGallery,
     News,
-    NewsContentBlock,
-    NewsImage,
     ProductionStep,
     Region,
     Room,
@@ -393,61 +391,6 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
         return representation
 
 
-class NewsImageSerializer(serializers.ModelSerializer):
-    """Сериализатор для изображений блока контента"""
-    image = ImageFieldSerializer(required=False, allow_null=True)
-    
-    class Meta:
-        model = NewsImage
-        fields = ["id", "image", "caption", "order"]
-        read_only_fields = ["id"]
-
-
-class NewsContentBlockSerializer(serializers.ModelSerializer):
-    """Сериализатор для блоков контента новости"""
-    images = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = NewsContentBlock
-        fields = ["id", "content_type", "title", "text_content", "images", "order"]
-        read_only_fields = ["id"]
-    
-    def get_images(self, obj):
-        """Получить изображения блока (только для блоков типа images)"""
-        if obj.content_type == 'images':
-            images = obj.images.all().order_by('order')[:3]  # Максимум 3 изображения
-            request = self.context.get("request")
-            
-            if request:
-                language = get_language_from_request(request)
-                
-                data = []
-                for image in images:
-                    item = {
-                        "id": image.id,
-                        "image": request.build_absolute_uri(image.image.url) if image.image else None,
-                        "caption": getattr(image, f"caption_{language}", image.caption) if language != "uz" else image.caption,
-                        "order": image.order,
-                    }
-                    data.append(item)
-                return data
-            
-            return NewsImageSerializer(images, many=True, context=self.context).data
-        return []
-    
-    def to_representation(self, instance):
-        """Возвращает данные на языке из query параметра lang"""
-        representation = super().to_representation(instance)
-        request = self.context.get("request")
-        
-        if request:
-            language = get_language_from_request(request)
-            
-            if language and language != "uz":
-                representation["title"] = getattr(instance, f"title_{language}", instance.title)
-                representation["text_content"] = getattr(instance, f"text_content_{language}", instance.text_content)
-        
-        return representation
 
 
 class NewsListSerializer(serializers.ModelSerializer):
@@ -468,9 +411,8 @@ class NewsListSerializer(serializers.ModelSerializer):
 
 
 class NewsDetailSerializer(serializers.ModelSerializer):
-    """Сериализатор для детальной информации о новости с динамическими блоками контента"""
+    """Сериализатор для детальной информации о новости"""
     cover_image = ImageFieldSerializer(required=False, allow_null=True)
-    content_blocks = serializers.SerializerMethodField()
 
     class Meta:
         model = News
@@ -479,51 +421,28 @@ class NewsDetailSerializer(serializers.ModelSerializer):
             "title",
             "slug",
             "description",
+            "content",
             "cover_image",
-            "content_blocks",
             "is_published",
             "created_at",
             "update_at",
         ]
         read_only_fields = ["id", "slug", "created_at", "update_at"]
     
-    def get_content_blocks(self, obj):
-        """Получить блоки контента с учетом языка"""
-        blocks = obj.content_blocks.all().order_by('order')
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
         request = self.context.get("request")
         
         if request:
             language = get_language_from_request(request)
             
-            data = []
-            for block in blocks:
-                item = {
-                    "id": block.id,
-                    "content_type": block.content_type,
-                    "order": block.order,
-                }
-                
-                # Добавляем текстовое содержание для текстовых блоков
-                if block.content_type == 'text':
-                    item["text_content"] = getattr(block, f"text_content_{language}", block.text_content) if language != "uz" else block.text_content
-                
-                # Добавляем изображения для блоков изображений
-                if block.content_type == 'images':
-                    images = block.images.all().order_by('order')[:3]
-                    item["images"] = []
-                    for image in images:
-                        img_data = {
-                            "id": image.id,
-                            "image": request.build_absolute_uri(image.image.url) if image.image else None,
-                            "caption": getattr(image, f"caption_{language}", image.caption) if language != "uz" else image.caption,
-                            "order": image.order,
-                        }
-                        item["images"].append(img_data)
-                
-                data.append(item)
-            return data
+            if language and language != "uz":
+                representation["title"] = getattr(instance, f"title_{language}", instance.title)
+                representation["description"] = getattr(instance, f"description_{language}", instance.description)
+                representation["content"] = getattr(instance, f"content_{language}", instance.content)
         
-        return NewsContentBlockSerializer(blocks, many=True, context=self.context).data
+        return representation
 
 
 class GallerySerializer(serializers.ModelSerializer):

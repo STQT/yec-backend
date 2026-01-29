@@ -20,8 +20,6 @@ from apps.catalog.models import (
     HomePage,
     MainGallery,
     News,
-    NewsContentBlock,
-    NewsImage,
     ProductionStep,
     Region,
     Room,
@@ -299,74 +297,15 @@ class CarpetAdmin(admin.ModelAdmin):
     photo_preview.short_description = "Превью"
 
 
-class NewsImageInline(admin.StackedInline):
-    """Inline для изображений блока контента"""
-    model = NewsImage
-    extra = 0
-    max_num = 3
-    fields = [
-        "image",
-        "caption_uz",
-        "caption_ru",
-        "caption_en",
-        "order"
-    ]
-    ordering = ["order"]
-    
-    def get_formset(self, request, obj=None, **kwargs):
-        """Ограничить максимум 3 изображения"""
-        formset = super().get_formset(request, obj, **kwargs)
-        return formset
-
-
-class NewsContentBlockInline(admin.StackedInline):
-    """Inline для блоков контента новости"""
-    model = NewsContentBlock
-    extra = 0
-    fields = [
-        "content_type",
-        "order",
-        "title_uz",
-        "title_ru",
-        "title_en",
-        "text_content_uz",
-        "text_content_ru",
-        "text_content_en",
-        "images_help"
-    ]
-    readonly_fields = ["images_help"]
-    ordering = ["order"]
-    
-    def images_help(self, obj):
-        """Помощь по добавлению изображений"""
-        if obj and obj.pk and obj.content_type == 'images':
-            url = f'/admin/catalog/newscontentblock/{obj.pk}/change/'
-            return format_html(
-                '<a href="{}" target="_blank" style="display: inline-block; padding: 8px 12px; background: #417690; color: white; text-decoration: none; border-radius: 4px;">➕ Добавить/редактировать изображения для этого блока</a>',
-                url
-            )
-        elif obj and obj.pk:
-            return format_html('<p style="color: #666;">Измените тип блока на "Блок изображений" чтобы добавить изображения</p>')
-        return format_html('<p style="color: #666;">Сохраните блок сначала, чтобы добавить изображения</p>')
-    images_help.short_description = "Изображения"
-    
-    class Media:
-        js = (
-            'https://cdn.ckeditor.com/4.25.1-lts/standard/ckeditor.js',
-            'js/ckeditor_init.js',
-        )
-
-
 @admin.register(News)
 class NewsAdmin(admin.ModelAdmin):
-    """Админка для новостей с динамическими блоками контента"""
+    """Админка для новостей с CKEditor"""
     list_display = ["cover_image_preview", "title", "slug", "is_published", "created_at"]
     list_display_links = ["title"]
     list_filter = ["is_published", "created_at"]
     search_fields = ["title", "description"]
     readonly_fields = ["cover_image_preview", "created_at", "update_at"]
     date_hierarchy = "created_at"
-    inlines = [NewsContentBlockInline]
     
     fieldsets = (
         ("Основная информация", {
@@ -374,6 +313,10 @@ class NewsAdmin(admin.ModelAdmin):
         }),
         ("Описание", {
             "fields": ("description_uz", "description_ru", "description_en")
+        }),
+        ("Содержание", {
+            "fields": ("content_uz", "content_ru", "content_en"),
+            "description": "Полное содержание новости. Поддерживает HTML (CKEditor)"
         }),
         ("Главное изображение", {
             "fields": ("cover_image", "cover_image_preview"),
@@ -386,6 +329,12 @@ class NewsAdmin(admin.ModelAdmin):
             "fields": ("created_at", "update_at")
         }),
     )
+    
+    class Media:
+        js = (
+            'https://cdn.ckeditor.com/4.25.1-lts/standard/ckeditor.js',
+            'js/ckeditor_init.js',
+        )
     
     def get_readonly_fields(self, request, obj=None):
         """Slug показывается только при редактировании существующего объекта"""
@@ -403,41 +352,6 @@ class NewsAdmin(admin.ModelAdmin):
             )
         return "-"
     cover_image_preview.short_description = "Превью"
-
-
-# NewsContentBlock - скрытая админка для редактирования изображений
-class NewsContentBlockAdmin(admin.ModelAdmin):
-    """Админка для блоков контента (для редактирования изображений)"""
-    list_display = ["news", "content_type", "order"]
-    list_filter = ["content_type", "news"]
-    search_fields = ["news__title"]
-    inlines = [NewsImageInline]
-    
-    fieldsets = (
-        ("Основная информация", {
-            "fields": ("news", "content_type", "order")
-        }),
-        ("Текстовое содержание", {
-            "fields": (
-                "text_content",
-                "text_content_ru",
-                "text_content_en"
-            ),
-            "description": "Заполняется только для текстовых блоков"
-        }),
-    )
-    
-    class Media:
-        js = (
-            'https://cdn.ckeditor.com/4.25.1-lts/standard/ckeditor.js',
-            'js/ckeditor_init.js',
-        )
-    
-    def has_module_permission(self, request):
-        """Скрыть из списка приложений в админке"""
-        return False
-
-admin.site.register(NewsContentBlock, NewsContentBlockAdmin)
 
 
 @admin.register(Gallery)
@@ -924,6 +838,8 @@ class CompanyHistoryInline(admin.StackedInline):
         "year_description_en",
     ]
     ordering = ["year"]
+    verbose_name = "Событие истории"
+    verbose_name_plural = "События истории"
 
 
 @admin.register(AboutPage)
@@ -1157,11 +1073,11 @@ class AboutPageAdmin(admin.ModelAdmin):
 
 @admin.register(ContactPage)
 class ContactPageAdmin(admin.ModelAdmin):
-    """Админка для страницы контактов"""
-    list_display = ["page_title", "phone", "email", "is_published", "created_at"]
-    list_display_links = ["page_title"]
+    """Админка для страницы контактов (singleton)"""
+    list_display = ["page_title_preview", "phone", "email", "is_published", "created_at"]
+    list_display_links = ["page_title_preview"]
     list_filter = ["is_published", "created_at"]
-    search_fields = ["page_title", "address", "phone", "email"]
+    search_fields = ["page_title_uz", "page_title_ru", "page_title_en", "address_uz", "phone", "email"]
     readonly_fields = ["created_at", "update_at"]
     
     fieldsets = (
@@ -1220,6 +1136,32 @@ class ContactPageAdmin(admin.ModelAdmin):
             "fields": ("is_published", "created_at", "update_at")
         }),
     )
+    
+    def changelist_view(self, request, extra_context=None):
+        """Перенаправляем на форму редактирования, если есть запись, или на создание"""
+        obj = ContactPage.objects.first()
+        if obj:
+            return HttpResponseRedirect(
+                reverse('admin:catalog_contactpage_change', args=[obj.pk])
+            )
+        return HttpResponseRedirect(
+            reverse('admin:catalog_contactpage_add')
+        )
+    
+    def has_add_permission(self, request):
+        """Разрешаем добавление только если нет записей"""
+        return ContactPage.objects.count() == 0
+    
+    def has_delete_permission(self, request, obj=None):
+        """Запрещаем удаление, так как должна быть только одна запись"""
+        return False
+    
+    def page_title_preview(self, obj):
+        """Превью заголовка для списка"""
+        if obj:
+            return obj.page_title_uz if hasattr(obj, 'page_title_uz') else obj.page_title
+        return "-"
+    page_title_preview.short_description = "Заголовок"
 
 
 class SalesPointInline(admin.StackedInline):

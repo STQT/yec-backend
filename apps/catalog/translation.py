@@ -11,8 +11,6 @@ from apps.catalog.models import (
     HomePage,
     MainGallery,
     News,
-    NewsContentBlock,
-    NewsImage,
     ProductionStep,
     Region,
     Room,
@@ -121,21 +119,7 @@ class CompanyHistoryTranslationOptions(TranslationOptions):
 @register(News)
 class NewsTranslationOptions(TranslationOptions):
     """Настройки переводов для новостей"""
-    fields = ('title', 'description')
-    required_languages = ('uz',)
-
-
-@register(NewsContentBlock)
-class NewsContentBlockTranslationOptions(TranslationOptions):
-    """Настройки переводов для блоков контента новостей"""
-    fields = ('title', 'text_content')
-    required_languages = ('uz',)
-
-
-@register(NewsImage)
-class NewsImageTranslationOptions(TranslationOptions):
-    """Настройки переводов для изображений новостей"""
-    fields = ('caption',)
+    fields = ('title', 'description', 'content')
     required_languages = ('uz',)
 
 

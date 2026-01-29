@@ -1,8 +1,13 @@
 // Инициализация CKEditor для текстовых полей
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация для основных текстовых полей
+    // Инициализация для полей content новостей
     const textareaIds = [
+        'id_content',
+        'id_content_uz',
+        'id_content_ru',
+        'id_content_en',
         'id_text_content',
+        'id_text_content_uz',
         'id_text_content_ru',
         'id_text_content_en'
     ];
@@ -11,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const textarea = document.getElementById(id);
         if (textarea) {
             CKEDITOR.replace(id, {
-                height: 300,
+                height: 400,
                 toolbar: [
                     { name: 'document', items: [ 'Source', '-', 'NewPage', 'Preview', '-', 'Templates' ] },
                     { name: 'clipboard', items: [ 'Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo' ] },
@@ -30,40 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 resize_enabled: true
             });
         }
-    });
-    
-    // Обработка inline форм (для динамически добавляемых блоков)
-    document.addEventListener('formset:added', function(event) {
-        const row = event.target;
-        const textareas = row.querySelectorAll('textarea[id*="text_content"]');
-        
-        textareas.forEach(function(textarea) {
-            if (textarea.id && !CKEDITOR.instances[textarea.id]) {
-                CKEDITOR.replace(textarea.id, {
-                    height: 200,
-                    toolbar: [
-                        { name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline' ] },
-                        { name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Blockquote' ] },
-                        { name: 'links', items: [ 'Link', 'Unlink' ] },
-                        { name: 'insert', items: [ 'Image' ] }
-                    ],
-                    removePlugins: 'elementspath',
-                    resize_enabled: true
-                });
-            }
-        });
-    });
-    
-    // Очистка при удалении inline формы
-    document.addEventListener('formset:removed', function(event) {
-        const row = event.target;
-        const textareas = row.querySelectorAll('textarea[id*="text_content"]');
-        
-        textareas.forEach(function(textarea) {
-            if (textarea.id && CKEDITOR.instances[textarea.id]) {
-                CKEDITOR.instances[textarea.id].destroy();
-            }
-        });
     });
 });
 

@@ -351,6 +351,12 @@ class News(models.Model):
     title = models.CharField(max_length=200, verbose_name='Заголовок')
     slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
     description = models.TextField(blank=True, null=True, verbose_name='Краткое описание')
+    content = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Содержание',
+        help_text='Полное содержание новости. Поддерживает HTML (CKEditor)'
+    )
     cover_image = models.ImageField(
         upload_to='photos/news/%Y/%m/', 
         verbose_name='Главное изображение', 
@@ -397,76 +403,6 @@ class News(models.Model):
         return reverse('catalog:news_detail', kwargs={'news_slug': self.slug})
 
 
-class NewsContentBlock(models.Model):
-    """Блок контента новости (текст или изображения)"""
-    CONTENT_TYPE_CHOICES = [
-        ('text', 'Текстовый блок'),
-        ('images', 'Блок изображений'),
-    ]
-    
-    news = models.ForeignKey(
-        News,
-        on_delete=models.CASCADE,
-        related_name='content_blocks',
-        verbose_name='Новость'
-    )
-    content_type = models.CharField(
-        max_length=10,
-        choices=CONTENT_TYPE_CHOICES,
-        default='text',
-        verbose_name='Тип блока'
-    )
-    title = models.CharField(
-        max_length=200,
-        blank=True,
-        verbose_name='Заголовок блока',
-        help_text='Опциональный заголовок для блока контента'
-    )
-    text_content = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name='Текстовое содержание',
-        help_text='Используется для текстовых блоков. Поддерживает HTML (CKEditor)'
-    )
-    order = models.PositiveIntegerField(default=0, verbose_name='Порядок')
-    
-    def __str__(self):
-        return f"{self.news.title} - {self.get_content_type_display()} #{self.order}"
-    
-    class Meta:
-        verbose_name = 'Блок контента новости'
-        verbose_name_plural = 'Блоки контента новости'
-        ordering = ['order']
-
-
-class NewsImage(models.Model):
-    """Изображение для блока изображений новости"""
-    content_block = models.ForeignKey(
-        NewsContentBlock,
-        on_delete=models.CASCADE,
-        related_name='images',
-        verbose_name='Блок контента',
-        limit_choices_to={'content_type': 'images'}
-    )
-    image = models.ImageField(
-        upload_to='photos/news/content/%Y/%m/',
-        verbose_name='Изображение'
-    )
-    caption = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True,
-        verbose_name='Подпись к изображению'
-    )
-    order = models.PositiveIntegerField(default=0, verbose_name='Порядок')
-    
-    def __str__(self):
-        return f"Image {self.order} - {self.content_block.news.title}"
-    
-    class Meta:
-        verbose_name = 'Изображение новости'
-        verbose_name_plural = 'Изображения новости'
-        ordering = ['order']
 
 
 # Модель для галереи
