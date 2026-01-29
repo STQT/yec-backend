@@ -850,7 +850,8 @@ class ContactPage(models.Model):
         blank=True, 
         null=True, 
         verbose_name='Ссылка на Google Maps',
-        help_text='Например: https://maps.google.com/...'
+        help_text='Например: https://maps.google.com/...',
+        max_length=1000,
     )
     
     # Форма обратной связи
