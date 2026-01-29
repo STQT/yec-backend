@@ -579,6 +579,7 @@ class HomePage(models.Model):
     
     # ========== СЕКЦИЯ 2: О НАС ==========
     # Переводимые поля
+    about_section_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Название секции "О нас"')
     about_title = models.CharField(max_length=200, verbose_name='Заголовок секции "О нас"')
     about_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка секции "О нас"')
     about_youtube_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на YouTube')
@@ -628,23 +629,6 @@ class HomePage(models.Model):
         verbose_name='SVG иконка карточки 4'
     )
     advantage_4_description = models.TextField(verbose_name='Описание карточки 4')
-    
-    # ========== СЕКЦИЯ 5: ПРИЗЫВ К ДЕЙСТВИЮ ==========
-    # Переводимые поля
-    cta_title = models.CharField(max_length=200, verbose_name='Заголовок призыва к действию')
-    cta_description = models.TextField(verbose_name='Описание призыва к действию')
-    
-    # Изображение (без перевода)
-    cta_image = models.ImageField(
-        upload_to='photos/homepage/cta/%Y/%m/',
-        blank=True,
-        null=True,
-        verbose_name='Изображение призыва к действию'
-    )
-    
-    # Ссылки (переводимые)
-    cta_contact_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на форму для связи')
-    cta_dealer_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка на форму для становления дилера')
     
     # ========== SEO ПОЛЯ ==========
     # Meta теги (переводимые)

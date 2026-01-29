@@ -545,9 +545,6 @@ class HomePageSerializer(serializers.ModelSerializer):
     advantage_1_icon = serializers.FileField(required=False, allow_null=True)
     advantage_4_icon = serializers.FileField(required=False, allow_null=True)
     
-    # Секция 5: Призыв к действию
-    cta_image = ImageFieldSerializer(required=False, allow_null=True)
-    
     class Meta:
         model = HomePage
         fields = [
@@ -561,6 +558,7 @@ class HomePageSerializer(serializers.ModelSerializer):
             "banner_showroom_title",
             "banner_showroom_image",
             # Секция 2: О нас
+            "about_section_title",
             "about_title",
             "about_link",
             "about_youtube_link",
@@ -582,12 +580,6 @@ class HomePageSerializer(serializers.ModelSerializer):
             "advantage_4_title",
             "advantage_4_icon",
             "advantage_4_description",
-            # Секция 5: Призыв к действию
-            "cta_title",
-            "cta_description",
-            "cta_image",
-            "cta_contact_link",
-            "cta_dealer_link",
         ]
         read_only_fields = ["id"]
     
@@ -620,7 +612,7 @@ class HomePageSerializer(serializers.ModelSerializer):
             
             # Секция 2: О нас
             multilingual_fields_about = [
-                'about_title', 'about_link', 'about_youtube_link', 'about_bottom_description'
+                'about_section_title', 'about_title', 'about_link', 'about_youtube_link', 'about_bottom_description'
             ]
             for field in multilingual_fields_about:
                 lang_field = f"{field}{lang_suffix}"
@@ -655,15 +647,6 @@ class HomePageSerializer(serializers.ModelSerializer):
                     lang_field = f"{field}{lang_suffix}"
                     if hasattr(instance, lang_field):
                         value = getattr(instance, lang_field)
-                        if value:
-                            representation[field] = value
-            
-            # Секция 5: Призыв к действию
-            multilingual_fields_cta = ['cta_title', 'cta_description', 'cta_contact_link', 'cta_dealer_link']
-            for field in multilingual_fields_cta:
-                lang_field = f"{field}{lang_suffix}"
-                if hasattr(instance, lang_field):
-                    value = getattr(instance, lang_field)
                     if value:
                         representation[field] = value
         

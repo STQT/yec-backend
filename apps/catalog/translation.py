@@ -29,6 +29,7 @@ class HomePageTranslationOptions(TranslationOptions):
         'banner_link',
         'banner_showroom_title',
         # Секция 2: О нас
+        'about_section_title',
         'about_title',
         'about_link',
         'about_youtube_link',
@@ -46,11 +47,6 @@ class HomePageTranslationOptions(TranslationOptions):
         'advantage_3_description',
         'advantage_4_title',
         'advantage_4_description',
-        # Секция 5: Призыв к действию
-        'cta_title',
-        'cta_description',
-        'cta_contact_link',
-        'cta_dealer_link',
         # SEO поля
         'meta_title',
         'meta_description',
