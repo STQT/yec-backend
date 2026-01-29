@@ -15,7 +15,6 @@ from apps.catalog.models import (
     CompanyHistory,
     ContactFormSubmission,
     ContactPage,
-    DealerAdvantage,
     FAQ,
     Gallery,
     HomePage,
@@ -23,7 +22,6 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
-    ProductionCapacity,
     ProductionStep,
     Region,
     Room,
@@ -729,9 +727,6 @@ class HomePageAdmin(admin.ModelAdmin):
                 "banner_showroom_title_uz",
                 "banner_showroom_title_ru",
                 "banner_showroom_title_en",
-                "banner_showroom_link_uz",
-                "banner_showroom_link_ru",
-                "banner_showroom_link_en",
                 "banner_showroom_image",
                 "banner_showroom_image_preview",
             )
@@ -920,118 +915,155 @@ class CompanyHistoryInline(admin.StackedInline):
     model = CompanyHistory
     extra = 1
     fields = [
-        "order",
         "year",
-        "title_uz",
-        "title_ru",
-        "title_en",
-        "description_uz",
-        "description_ru",
-        "description_en",
-        "image"
+        "year_title_uz",
+        "year_title_ru",
+        "year_title_en",
+        "year_description_uz",
+        "year_description_ru",
+        "year_description_en",
     ]
-    ordering = ["order", "year"]
-
-
-class ProductionCapacityInline(admin.StackedInline):
-    """Inline для объемов производства"""
-    model = ProductionCapacity
-    extra = 1
-    fields = [
-        "order",
-        "year",
-        "capacity_uz",
-        "capacity_ru",
-        "capacity_en",
-        "description_uz",
-        "description_ru",
-        "description_en",
-        "image"
-    ]
-    ordering = ["order", "year"]
-
-
-class DealerAdvantageInline(admin.StackedInline):
-    """Inline для преимуществ дилеров"""
-    model = DealerAdvantage
-    extra = 1
-    fields = [
-        "order",
-        "title_uz",
-        "title_ru",
-        "title_en",
-        "description_uz",
-        "description_ru",
-        "description_en",
-        "is_published"
-    ]
-    ordering = ["order"]
+    ordering = ["year"]
 
 
 @admin.register(AboutPage)
 class AboutPageAdmin(admin.ModelAdmin):
     """Админка для страницы о компании"""
-    list_display = ["main_image_preview", "company_title", "is_published", "created_at"]
-    list_display_links = ["company_title"]
+    list_display = ["about_section_title_preview", "is_published", "created_at"]
+    list_display_links = ["about_section_title_preview"]
     list_filter = ["is_published", "created_at"]
-    search_fields = ["company_title", "company_description"]
-    readonly_fields = ["main_image_preview", "showroom_image_preview", "created_at", "update_at"]
+    search_fields = ["about_section_title_uz", "about_banner_title_uz"]
+    readonly_fields = [
+        "about_image_1_preview",
+        "about_image_2_preview",
+        "capacity_card_1_image_preview",
+        "capacity_card_2_image_preview",
+        "capacity_card_3_image_preview",
+        "capacity_card_4_image_preview",
+        "created_at",
+        "update_at"
+    ]
     date_hierarchy = "created_at"
-    inlines = [ProductionStepInline, CompanyHistoryInline, ProductionCapacityInline, DealerAdvantageInline]
+    inlines = [ProductionStepInline, CompanyHistoryInline]
     fieldsets = (
-        ("Описание компании", {
+        # ========== СЕКЦИЯ 1: О КОМПАНИИ ==========
+        ("О компании", {
             "fields": (
-                "company_title_uz",
-                "company_title_ru",
-                "company_title_en",
-                "company_subtitle_uz",
-                "company_subtitle_ru",
-                "company_subtitle_en",
-                "company_description_uz",
-                "company_description_ru",
-                "company_description_en",
-                "main_image",
-                "main_image_preview",
+                "about_section_title_uz",
+                "about_section_title_ru",
+                "about_section_title_en",
+                "about_banner_title_uz",
+                "about_banner_title_ru",
+                "about_banner_title_en",
+                "about_banner_subtitle_uz",
+                "about_banner_subtitle_ru",
+                "about_banner_subtitle_en",
+                "about_image_1",
+                "about_image_1_preview",
+                "about_image_2",
+                "about_image_2_preview",
             )
         }),
-        ("Секция производства - заголовок", {
+        # ========== СЕКЦИЯ 2: ПРОЦЕСС ПРОИЗВОДСТВА ==========
+        ("Процесс производства", {
             "fields": (
                 "production_section_title_uz",
                 "production_section_title_ru",
                 "production_section_title_en",
+                "production_title_uz",
+                "production_title_ru",
+                "production_title_en",
             )
         }),
-        ("Секция истории - заголовок", {
+        # ========== СЕКЦИЯ 3: ИСТОРИЯ КОМПАНИИ ==========
+        ("История компании", {
             "fields": (
                 "history_section_title_uz",
                 "history_section_title_ru",
                 "history_section_title_en",
             )
         }),
-        ("Секция объемов производства - заголовок", {
+        # ========== СЕКЦИЯ 4: ОБЪЕМЫ ПРОИЗВОДСТВА ==========
+        ("Объемы производства", {
             "fields": (
                 "capacity_section_title_uz",
                 "capacity_section_title_ru",
                 "capacity_section_title_en",
+                "capacity_title_uz",
+                "capacity_title_ru",
+                "capacity_title_en",
+                # Карточка 1
+                "capacity_card_1_title_uz",
+                "capacity_card_1_title_ru",
+                "capacity_card_1_title_en",
+                "capacity_card_1_subtitle_uz",
+                "capacity_card_1_subtitle_ru",
+                "capacity_card_1_subtitle_en",
+                "capacity_card_1_image",
+                "capacity_card_1_image_preview",
+                # Карточка 2
+                "capacity_card_2_title_uz",
+                "capacity_card_2_title_ru",
+                "capacity_card_2_title_en",
+                "capacity_card_2_subtitle_uz",
+                "capacity_card_2_subtitle_ru",
+                "capacity_card_2_subtitle_en",
+                "capacity_card_2_image",
+                "capacity_card_2_image_preview",
+                # Карточка 3
+                "capacity_card_3_title_uz",
+                "capacity_card_3_title_ru",
+                "capacity_card_3_title_en",
+                "capacity_card_3_subtitle_uz",
+                "capacity_card_3_subtitle_ru",
+                "capacity_card_3_subtitle_en",
+                "capacity_card_3_image",
+                "capacity_card_3_image_preview",
+                # Карточка 4
+                "capacity_card_4_title_uz",
+                "capacity_card_4_title_ru",
+                "capacity_card_4_title_en",
+                "capacity_card_4_subtitle_uz",
+                "capacity_card_4_subtitle_ru",
+                "capacity_card_4_subtitle_en",
+                "capacity_card_4_image",
+                "capacity_card_4_image_preview",
             )
         }),
-        ("Секция дилеров - заголовок", {
+        # ========== СЕКЦИЯ 5: ПАРТНЕРСТВО ДЛЯ ДИЛЕРОВ ==========
+        ("Партнерство для дилеров", {
             "fields": (
                 "dealer_section_title_uz",
                 "dealer_section_title_ru",
                 "dealer_section_title_en",
+                "dealer_title_uz",
+                "dealer_title_ru",
+                "dealer_title_en",
+                # Карточка 1
+                "dealer_card_1_title_uz",
+                "dealer_card_1_title_ru",
+                "dealer_card_1_title_en",
+                "dealer_card_1_description_uz",
+                "dealer_card_1_description_ru",
+                "dealer_card_1_description_en",
+                # Карточка 2
+                "dealer_card_2_title_uz",
+                "dealer_card_2_title_ru",
+                "dealer_card_2_title_en",
+                "dealer_card_2_description_uz",
+                "dealer_card_2_description_ru",
+                "dealer_card_2_description_en",
+                # Карточка 3
+                "dealer_card_3_title_uz",
+                "dealer_card_3_title_ru",
+                "dealer_card_3_title_en",
+                "dealer_card_3_description_uz",
+                "dealer_card_3_description_ru",
+                "dealer_card_3_description_en",
             )
         }),
-        ("Секция шоурума", {
-            "fields": (
-                "showroom_button_text_uz",
-                "showroom_button_text_ru",
-                "showroom_button_text_en",
-                "showroom_image",
-                "showroom_image_preview",
-            )
-        }),
-        ("Настройки и даты", {
+        # ========== НАСТРОЙКИ ==========
+        ("Настройки", {
             "fields": ("is_published", "created_at", "update_at")
         }),
     )
@@ -1055,25 +1087,72 @@ class AboutPageAdmin(admin.ModelAdmin):
         """Запрещаем удаление, так как должна быть только одна запись"""
         return False
 
-    def main_image_preview(self, obj):
-        """Превью главного изображения"""
-        if obj.main_image:
+    def about_section_title_preview(self, obj):
+        """Превью названия секции для списка"""
+        if obj:
+            return obj.about_section_title_uz if hasattr(obj, 'about_section_title_uz') else obj.about_section_title
+        return "-"
+    about_section_title_preview.short_description = "Название секции"
+    
+    def about_image_1_preview(self, obj):
+        """Превью первого изображения"""
+        if obj and obj.about_image_1:
             return format_html(
                 '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
-                obj.main_image.url
+                obj.about_image_1.url
             )
         return "-"
-    main_image_preview.short_description = "Превью главного изображения"
-
-    def showroom_image_preview(self, obj):
-        """Превью изображения шоурума"""
-        if obj.showroom_image:
+    about_image_1_preview.short_description = "Превью изображения 1"
+    
+    def about_image_2_preview(self, obj):
+        """Превью второго изображения"""
+        if obj and obj.about_image_2:
             return format_html(
                 '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
-                obj.showroom_image.url
+                obj.about_image_2.url
             )
         return "-"
-    showroom_image_preview.short_description = "Превью изображения шоурума"
+    about_image_2_preview.short_description = "Превью изображения 2"
+    
+    def capacity_card_1_image_preview(self, obj):
+        """Превью изображения карточки 1"""
+        if obj and obj.capacity_card_1_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.capacity_card_1_image.url
+            )
+        return "-"
+    capacity_card_1_image_preview.short_description = "Превью изображения карточки 1"
+    
+    def capacity_card_2_image_preview(self, obj):
+        """Превью изображения карточки 2"""
+        if obj and obj.capacity_card_2_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.capacity_card_2_image.url
+            )
+        return "-"
+    capacity_card_2_image_preview.short_description = "Превью изображения карточки 2"
+    
+    def capacity_card_3_image_preview(self, obj):
+        """Превью изображения карточки 3"""
+        if obj and obj.capacity_card_3_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.capacity_card_3_image.url
+            )
+        return "-"
+    capacity_card_3_image_preview.short_description = "Превью изображения карточки 3"
+    
+    def capacity_card_4_image_preview(self, obj):
+        """Превью изображения карточки 4"""
+        if obj and obj.capacity_card_4_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.capacity_card_4_image.url
+            )
+        return "-"
+    capacity_card_4_image_preview.short_description = "Превью изображения карточки 4"
 
 
 @admin.register(ContactPage)

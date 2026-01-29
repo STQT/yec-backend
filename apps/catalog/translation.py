@@ -7,14 +7,12 @@ from apps.catalog.models import (
     Color,
     CompanyHistory,
     ContactPage,
-    DealerAdvantage,
     FAQ,
     HomePage,
     MainGallery,
     News,
     NewsContentBlock,
     NewsImage,
-    ProductionCapacity,
     ProductionStep,
     Region,
     Room,
@@ -32,7 +30,6 @@ class HomePageTranslationOptions(TranslationOptions):
         'banner_description',
         'banner_link',
         'banner_showroom_title',
-        'banner_showroom_link',
         # Секция 2: О нас
         'about_title',
         'about_link',
@@ -71,14 +68,35 @@ class MainGalleryTranslationOptions(TranslationOptions):
 class AboutPageTranslationOptions(TranslationOptions):
     """Настройки переводов для страницы о компании"""
     fields = (
-        'company_title',
-        'company_subtitle',
-        'company_description',
+        # Секция 1: О компании
+        'about_section_title',
+        'about_banner_title',
+        'about_banner_subtitle',
+        # Секция 2: Процесс производства
         'production_section_title',
+        'production_title',
+        # Секция 3: История компании
         'history_section_title',
+        # Секция 4: Объемы производства
         'capacity_section_title',
+        'capacity_title',
+        'capacity_card_1_title',
+        'capacity_card_1_subtitle',
+        'capacity_card_2_title',
+        'capacity_card_2_subtitle',
+        'capacity_card_3_title',
+        'capacity_card_3_subtitle',
+        'capacity_card_4_title',
+        'capacity_card_4_subtitle',
+        # Секция 5: Партнерство для дилеров
         'dealer_section_title',
-        'showroom_button_text',
+        'dealer_title',
+        'dealer_card_1_title',
+        'dealer_card_1_description',
+        'dealer_card_2_title',
+        'dealer_card_2_description',
+        'dealer_card_3_title',
+        'dealer_card_3_description',
     )
     required_languages = ('uz',)
 
@@ -93,22 +111,11 @@ class ProductionStepTranslationOptions(TranslationOptions):
 @register(CompanyHistory)
 class CompanyHistoryTranslationOptions(TranslationOptions):
     """Настройки переводов для истории компании"""
-    fields = ('title', 'description')
+    fields = ('year_title', 'year_description')
     required_languages = ('uz',)
 
 
-@register(ProductionCapacity)
-class ProductionCapacityTranslationOptions(TranslationOptions):
-    """Настройки переводов для объемов производства"""
-    fields = ('capacity', 'description')
-    required_languages = ('uz',)
-
-
-@register(DealerAdvantage)
-class DealerAdvantageTranslationOptions(TranslationOptions):
-    """Настройки переводов для преимуществ дилеров"""
-    fields = ('title', 'description')
-    required_languages = ('uz',)
+# ProductionCapacity и DealerAdvantage удалены - теперь статичные поля в AboutPage
 
 
 @register(News)

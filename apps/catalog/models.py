@@ -78,52 +78,19 @@ class CompanyHistory(models.Model):
         verbose_name='Страница о компании'
     )
     year = models.PositiveIntegerField(verbose_name='Год')
-    title = models.CharField(max_length=200, verbose_name='Заголовок события')
-    description = models.TextField(verbose_name='Описание события')
-    image = models.ImageField(
-        upload_to='photos/company_history/%Y/%m/',
-        verbose_name='Изображение события',
-        blank=True,
-        null=True
-    )
-    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    year_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Название года')
+    year_description = models.TextField(blank=True, null=True, verbose_name='Описание года')
     
     def __str__(self):
-        return f"{self.year} - {self.title}"
+        return f"{self.year} - {self.year_title}"
     
     class Meta:
         verbose_name = 'История компании'
         verbose_name_plural = 'История компании'
-        ordering = ['order', 'year']
+        ordering = ['year']
 
 
-# Модель для объемов производства
-class ProductionCapacity(models.Model):
-    """Объем производства"""
-    about_page = models.ForeignKey(
-        'AboutPage',
-        on_delete=models.CASCADE,
-        related_name='production_capacity',
-        verbose_name='Страница о компании'
-    )
-    year = models.PositiveIntegerField(verbose_name='Год')
-    capacity = models.CharField(max_length=100, verbose_name='Объем производства')
-    description = models.TextField(verbose_name='Описание', blank=True)
-    image = models.ImageField(
-        upload_to='photos/production_capacity/%Y/%m/',
-        verbose_name='Изображение',
-        blank=True,
-        null=True
-    )
-    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
-    
-    def __str__(self):
-        return f"{self.year} - {self.capacity}"
-    
-    class Meta:
-        verbose_name = 'Объем производства'
-        verbose_name_plural = 'Объемы производства'
-        ordering = ['order', 'year']
+# Модель ProductionCapacity удалена - теперь статичные поля в AboutPage
 
 
 # Модель Collection
@@ -659,7 +626,6 @@ class HomePage(models.Model):
     
     # Шоурум в баннере - переводимые поля
     banner_showroom_title = models.CharField(max_length=200, verbose_name='Заголовок шоурума')
-    banner_showroom_link = models.CharField(max_length=500, blank=True, verbose_name='Ссылка шоурума')
     
     # Шоурум в баннере - без перевода
     banner_showroom_image = models.ImageField(
@@ -757,46 +723,104 @@ class HomePage(models.Model):
 class AboutPage(models.Model):
     """Модель страницы о компании - все данные в одной модели"""
     
-    # Основная информация о компании
-    company_title = models.CharField(max_length=200, verbose_name='Название компании')
-    company_subtitle = models.CharField(max_length=200, blank=True, null=True, verbose_name='Подзаголовок')
-    company_description = models.TextField(verbose_name='Описание компании')
-    main_image = models.ImageField(upload_to='photos/about/%Y/%m/', verbose_name='Главное изображение')
-    showroom_image = models.ImageField(upload_to='photos/about/showroom/%Y/%m/', verbose_name='Изображение шоурума')
+    # ========== СЕКЦИЯ 1: О КОМПАНИИ ==========
+    # Переводимые поля
+    about_section_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Название секции "О компании"')
+    about_banner_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок баннера')
+    about_banner_subtitle = models.CharField(max_length=200, blank=True, null=True, verbose_name='Подзаголовок баннера')
     
-    # Заголовки секций
-    production_section_title = models.CharField(
-        max_length=200, 
-        default='Ishlab chiqarish jarayoni', 
-        verbose_name='Заголовок секции производства'
+    # Изображения (без перевода)
+    about_image_1 = models.ImageField(
+        upload_to='photos/about/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение 1'
     )
-    history_section_title = models.CharField(
-        max_length=200, 
-        default='Kompaniya tarixi',
-        verbose_name='Заголовок секции истории'
-    )
-    capacity_section_title = models.CharField(
-        max_length=200, 
-        default='Ishlab chiqarish hajmi',
-        verbose_name='Заголовок секции объемов'
-    )
-    dealer_section_title = models.CharField(
-        max_length=200, 
-        default='Dilerlar uchun hamkorlik',
-        verbose_name='Заголовок секции для дилеров'
-    )
-    showroom_button_text = models.CharField(
-        max_length=100, 
-        default="To'liq ekranda ko'rish",
-        verbose_name='Текст кнопки шоурума'
+    about_image_2 = models.ImageField(
+        upload_to='photos/about/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение 2'
     )
     
+    # ========== СЕКЦИЯ 2: ПРОЦЕСС ПРОИЗВОДСТВА ==========
+    # Переводимые поля
+    production_section_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Название секции "Процесс производства"')
+    production_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок секции производства')
+    
+    # ========== СЕКЦИЯ 3: ИСТОРИЯ КОМПАНИИ ==========
+    # Переводимые поля
+    history_section_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Название секции "История компании"')
+    
+    # ========== СЕКЦИЯ 4: ОБЪЕМЫ ПРОИЗВОДСТВА ==========
+    # Переводимые поля
+    capacity_section_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Название секции "Объемы производства"')
+    capacity_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок секции объемов')
+    
+    # Карточка 1
+    capacity_card_1_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок карточки 1')
+    capacity_card_1_subtitle = models.CharField(max_length=200, blank=True, null=True, verbose_name='Подзаголовок карточки 1')
+    capacity_card_1_image = models.ImageField(
+        upload_to='photos/production_capacity/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение карточки 1'
+    )
+    
+    # Карточка 2
+    capacity_card_2_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок карточки 2')
+    capacity_card_2_subtitle = models.CharField(max_length=200, blank=True, null=True, verbose_name='Подзаголовок карточки 2')
+    capacity_card_2_image = models.ImageField(
+        upload_to='photos/production_capacity/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение карточки 2'
+    )
+    
+    # Карточка 3
+    capacity_card_3_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок карточки 3')
+    capacity_card_3_subtitle = models.CharField(max_length=200, blank=True, null=True, verbose_name='Подзаголовок карточки 3')
+    capacity_card_3_image = models.ImageField(
+        upload_to='photos/production_capacity/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение карточки 3'
+    )
+    
+    # Карточка 4
+    capacity_card_4_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок карточки 4')
+    capacity_card_4_subtitle = models.CharField(max_length=200, blank=True, null=True, verbose_name='Подзаголовок карточки 4')
+    capacity_card_4_image = models.ImageField(
+        upload_to='photos/production_capacity/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение карточки 4'
+    )
+    
+    # ========== СЕКЦИЯ 5: ПАРТНЕРСТВО ДЛЯ ДИЛЕРОВ ==========
+    # Переводимые поля
+    dealer_section_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Название секции "Партнерство для дилеров"')
+    dealer_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок секции для дилеров')
+    
+    # Карточка 1
+    dealer_card_1_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок карточки 1')
+    dealer_card_1_description = models.TextField(blank=True, null=True, verbose_name='Описание карточки 1')
+    
+    # Карточка 2
+    dealer_card_2_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок карточки 2')
+    dealer_card_2_description = models.TextField(blank=True, null=True, verbose_name='Описание карточки 2')
+    
+    # Карточка 3
+    dealer_card_3_title = models.CharField(max_length=200, blank=True, null=True, verbose_name='Заголовок карточки 3')
+    dealer_card_3_description = models.TextField(blank=True, null=True, verbose_name='Описание карточки 3')
+    
+    # ========== СЛУЖЕБНЫЕ ПОЛЯ ==========
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
 
     def __str__(self):
-        return self.company_title
+        return self.about_section_title_uz if hasattr(self, 'about_section_title_uz') else self.about_section_title
 
     class Meta:
         verbose_name = 'Страница о компании'
@@ -804,26 +828,7 @@ class AboutPage(models.Model):
         ordering = ['-created_at']
 
 
-class DealerAdvantage(models.Model):
-    """Модель преимуществ для дилеров"""
-    about_page = models.ForeignKey(
-        AboutPage,
-        on_delete=models.CASCADE,
-        related_name='dealer_advantages',
-        verbose_name='Страница о компании'
-    )
-    title = models.CharField(max_length=200, verbose_name='Заголовок')
-    description = models.TextField(verbose_name='Описание')
-    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
-    is_published = models.BooleanField(default=True, verbose_name='Публикация')
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Преимущество для дилеров'
-        verbose_name_plural = 'Преимущества для дилеров'
-        ordering = ['order']
+# Модель DealerAdvantage удалена - теперь статичные поля в AboutPage
 
 
 # Модели для страницы контактов

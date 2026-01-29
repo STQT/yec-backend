@@ -11,7 +11,6 @@ from apps.catalog.models import (
     CompanyHistory,
     ContactFormSubmission,
     ContactPage,
-    DealerAdvantage,
     FAQ,
     Gallery,
     HomePage,
@@ -19,7 +18,6 @@ from apps.catalog.models import (
     News,
     NewsContentBlock,
     NewsImage,
-    ProductionCapacity,
     ProductionStep,
     Region,
     Room,
@@ -643,7 +641,6 @@ class HomePageSerializer(serializers.ModelSerializer):
             "banner_video",
             "banner_showroom_title",
             "banner_showroom_image",
-            "banner_showroom_link",
             # Секция 2: О нас
             "about_title",
             "about_link",
@@ -693,7 +690,7 @@ class HomePageSerializer(serializers.ModelSerializer):
             # Секция 1: Баннер
             multilingual_fields_banner = [
                 'banner_title', 'banner_description', 'banner_link',
-                'banner_showroom_title', 'banner_showroom_link'
+                'banner_showroom_title'
             ]
             for field in multilingual_fields_banner:
                 lang_field = f"{field}{lang_suffix}"
@@ -762,64 +759,110 @@ class ProductionStepSerializer(serializers.ModelSerializer):
         model = ProductionStep
         fields = ["id", "title", "description", "image", "order"]
         read_only_fields = ["id"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
+            
+            for field in ['title', 'description']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+        
+        return representation
 
 
 class CompanyHistorySerializer(serializers.ModelSerializer):
     """Сериализатор для истории компании"""
-    image = ImageFieldSerializer(required=False, allow_null=True)
 
     class Meta:
         model = CompanyHistory
-        fields = ["id", "year", "title", "description", "image", "order"]
+        fields = ["id", "year", "year_title", "year_description"]
         read_only_fields = ["id"]
-
-
-class ProductionCapacitySerializer(serializers.ModelSerializer):
-    """Сериализатор для объемов производства"""
-    image = ImageFieldSerializer(required=False, allow_null=True)
-
-    class Meta:
-        model = ProductionCapacity
-        fields = ["id", "year", "capacity", "description", "image", "order"]
-        read_only_fields = ["id"]
-
-
-class DealerAdvantageSerializer(serializers.ModelSerializer):
-    """Сериализатор для преимуществ дилеров"""
-
-    class Meta:
-        model = DealerAdvantage
-        fields = ["id", "title", "description", "order"]
-        read_only_fields = ["id"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
+            
+            for field in ['year_title', 'year_description']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+        
+        return representation
 
 
 class AboutPageSerializer(serializers.ModelSerializer):
     """Сериализатор для страницы о компании с поддержкой мультиязычности"""
-    main_image = ImageFieldSerializer(required=False, allow_null=True)
-    showroom_image = ImageFieldSerializer(required=False, allow_null=True)
+    # Секция 1: О компании
+    about_image_1 = ImageFieldSerializer(required=False, allow_null=True)
+    about_image_2 = ImageFieldSerializer(required=False, allow_null=True)
+    
+    # Секция 4: Объемы производства
+    capacity_card_1_image = ImageFieldSerializer(required=False, allow_null=True)
+    capacity_card_2_image = ImageFieldSerializer(required=False, allow_null=True)
+    capacity_card_3_image = ImageFieldSerializer(required=False, allow_null=True)
+    capacity_card_4_image = ImageFieldSerializer(required=False, allow_null=True)
+    
+    # Динамические секции
     production_steps = serializers.SerializerMethodField()
     company_history = serializers.SerializerMethodField()
-    production_capacity = serializers.SerializerMethodField()
-    dealer_advantages = serializers.SerializerMethodField()
 
     class Meta:
         model = AboutPage
         fields = [
             "id",
-            "company_title",
-            "company_subtitle",
-            "company_description",
-            "main_image",
-            "showroom_image",
+            # Секция 1: О компании
+            "about_section_title",
+            "about_banner_title",
+            "about_banner_subtitle",
+            "about_image_1",
+            "about_image_2",
+            # Секция 2: Процесс производства
             "production_section_title",
-            "history_section_title",
-            "capacity_section_title",
-            "dealer_section_title",
-            "showroom_button_text",
+            "production_title",
             "production_steps",
+            # Секция 3: История компании
+            "history_section_title",
             "company_history",
-            "production_capacity",
-            "dealer_advantages",
+            # Секция 4: Объемы производства
+            "capacity_section_title",
+            "capacity_title",
+            "capacity_card_1_title",
+            "capacity_card_1_subtitle",
+            "capacity_card_1_image",
+            "capacity_card_2_title",
+            "capacity_card_2_subtitle",
+            "capacity_card_2_image",
+            "capacity_card_3_title",
+            "capacity_card_3_subtitle",
+            "capacity_card_3_image",
+            "capacity_card_4_title",
+            "capacity_card_4_subtitle",
+            "capacity_card_4_image",
+            # Секция 5: Партнерство для дилеров
+            "dealer_section_title",
+            "dealer_title",
+            "dealer_card_1_title",
+            "dealer_card_1_description",
+            "dealer_card_2_title",
+            "dealer_card_2_description",
+            "dealer_card_3_title",
+            "dealer_card_3_description",
         ]
         read_only_fields = ["id"]
     
@@ -847,70 +890,8 @@ class AboutPageSerializer(serializers.ModelSerializer):
     
     def get_company_history(self, obj):
         """Получить историю компании с учетом языка"""
-        history = obj.company_history.all().order_by('order', 'year')
-        request = self.context.get("request")
-        
-        if request:
-            language = get_language_from_request(request)
-            
-            data = []
-            for item in history:
-                history_item = {
-                    "id": item.id,
-                    "year": item.year,
-                    "order": item.order,
-                    "title": getattr(item, f"title_{language}", item.title) if language != "uz" else item.title,
-                    "description": getattr(item, f"description_{language}", item.description) if language != "uz" else item.description,
-                    "image": request.build_absolute_uri(item.image.url) if item.image else None,
-                }
-                data.append(history_item)
-            return data
-        
+        history = obj.company_history.all().order_by('year')
         return CompanyHistorySerializer(history, many=True, context=self.context).data
-    
-    def get_production_capacity(self, obj):
-        """Получить объемы производства с учетом языка"""
-        capacity = obj.production_capacity.all().order_by('order', 'year')
-        request = self.context.get("request")
-        
-        if request:
-            language = get_language_from_request(request)
-            
-            data = []
-            for item in capacity:
-                capacity_item = {
-                    "id": item.id,
-                    "year": item.year,
-                    "order": item.order,
-                    "capacity": getattr(item, f"capacity_{language}", item.capacity) if language != "uz" else item.capacity,
-                    "description": getattr(item, f"description_{language}", item.description) if language != "uz" else item.description,
-                    "image": request.build_absolute_uri(item.image.url) if item.image else None,
-                }
-                data.append(capacity_item)
-            return data
-        
-        return ProductionCapacitySerializer(capacity, many=True, context=self.context).data
-    
-    def get_dealer_advantages(self, obj):
-        """Получить преимущества дилеров с учетом языка"""
-        advantages = obj.dealer_advantages.filter(is_published=True).order_by('order')
-        request = self.context.get("request")
-        
-        if request:
-            language = get_language_from_request(request)
-            
-            data = []
-            for advantage in advantages:
-                item = {
-                    "id": advantage.id,
-                    "order": advantage.order,
-                    "title": getattr(advantage, f"title_{language}", advantage.title) if language != "uz" else advantage.title,
-                    "description": getattr(advantage, f"description_{language}", advantage.description) if language != "uz" else advantage.description,
-                }
-                data.append(item)
-            return data
-        
-        return DealerAdvantageSerializer(advantages, many=True).data
 
     def to_representation(self, instance):
         """Возвращает данные на языке из query параметра lang"""
@@ -918,55 +899,70 @@ class AboutPageSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         
         if request:
-            # Получаем язык из query параметра
             language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
             
-            # Получаем переведенные поля для основной информации
-            if language and language != "uz":  # uz - язык по умолчанию
-                representation["company_title"] = getattr(instance, f"company_title_{language}", instance.company_title)
-                representation["company_subtitle"] = getattr(instance, f"company_subtitle_{language}", instance.company_subtitle)
-                representation["company_description"] = getattr(instance, f"company_description_{language}", instance.company_description)
-                representation["production_section_title"] = getattr(instance, f"production_section_title_{language}", instance.production_section_title)
-                representation["history_section_title"] = getattr(instance, f"history_section_title_{language}", instance.history_section_title)
-                representation["capacity_section_title"] = getattr(instance, f"capacity_section_title_{language}", instance.capacity_section_title)
-                representation["dealer_section_title"] = getattr(instance, f"dealer_section_title_{language}", instance.dealer_section_title)
-                representation["showroom_button_text"] = getattr(instance, f"showroom_button_text_{language}", instance.showroom_button_text)
+            # Секция 1: О компании
+            multilingual_fields_about = [
+                'about_section_title', 'about_banner_title', 'about_banner_subtitle'
+            ]
+            for field in multilingual_fields_about:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
             
-            # Переводим JSON поля
-            representation["production_steps"] = self._translate_json_list(
-                instance.production_steps, language, ["title", "description"]
-            )
-            representation["company_history"] = self._translate_json_list(
-                instance.company_history, language, ["title", "description"]
-            )
-            representation["production_capacity"] = self._translate_json_list(
-                instance.production_capacity, language, ["capacity", "description"]
-            )
-            # dealer_advantages обрабатывается через get_dealer_advantages()
+            # Секция 2: Процесс производства
+            multilingual_fields_production = [
+                'production_section_title', 'production_title'
+            ]
+            for field in multilingual_fields_production:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+            
+            # Секция 3: История компании
+            multilingual_fields_history = ['history_section_title']
+            for field in multilingual_fields_history:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+            
+            # Секция 4: Объемы производства
+            multilingual_fields_capacity = [
+                'capacity_section_title', 'capacity_title',
+                'capacity_card_1_title', 'capacity_card_1_subtitle',
+                'capacity_card_2_title', 'capacity_card_2_subtitle',
+                'capacity_card_3_title', 'capacity_card_3_subtitle',
+                'capacity_card_4_title', 'capacity_card_4_subtitle',
+            ]
+            for field in multilingual_fields_capacity:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+            
+            # Секция 5: Партнерство для дилеров
+            multilingual_fields_dealer = [
+                'dealer_section_title', 'dealer_title',
+                'dealer_card_1_title', 'dealer_card_1_description',
+                'dealer_card_2_title', 'dealer_card_2_description',
+                'dealer_card_3_title', 'dealer_card_3_description',
+            ]
+            for field in multilingual_fields_dealer:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
         
         return representation
-
-    def _translate_json_list(self, json_data, language, translatable_fields):
-        """Переводит поля в JSON списке на нужный язык"""
-        if not json_data or language == "uz":
-            return json_data
-        
-        translated_data = []
-        for item in json_data:
-            translated_item = item.copy()
-            
-            # Заменяем поля на переведенные версии
-            for field in translatable_fields:
-                lang_field = f"{field}_{language}"
-                if lang_field in item and item[lang_field]:
-                    translated_item[field] = item[lang_field]
-                # Удаляем языковые поля из ответа
-                for lang in ["uz", "ru", "en"]:
-                    translated_item.pop(f"{field}_{lang}", None)
-            
-            translated_data.append(translated_item)
-        
-        return translated_data
 
 
 class ContactPageSerializer(serializers.ModelSerializer):
