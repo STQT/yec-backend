@@ -11,6 +11,7 @@ from .views import (
     ContactPageViewSet,
     FAQViewSet,
     GalleryViewSet,
+    GlobalSettingsViewSet,
     HomePageViewSet,
     MainGalleryViewSet,
     NewsViewSet,
@@ -35,6 +36,7 @@ router.register("regions", RegionViewSet, basename="region")
 router.register("contact-form", ContactFormSubmissionViewSet, basename="contact-form")
 router.register("faq", FAQViewSet, basename="faq")
 router.register("advantages", AdvantageCardViewSet, basename="advantage")
+router.register("global-settings", GlobalSettingsViewSet, basename="global-settings")
 
 app_name = "catalog_api"
 urlpatterns = router.urls

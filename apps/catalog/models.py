@@ -109,6 +109,22 @@ class Collection(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     is_new = models.BooleanField(default=False, verbose_name='Новая коллекция')
+    
+    # SEO поля
+    seo_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='SEO Title',
+        help_text='Заголовок страницы для поисковых систем (рекомендуется до 60 символов)'
+    )
+    seo_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='SEO Description',
+        help_text='Описание страницы для поисковых систем (рекомендуется до 160 символов)'
+    )
 
     def save(self, *args, **kwargs):
         # Автогенерация slug из name_uz (основной язык) или name, если name_uz не заполнен
@@ -352,27 +368,83 @@ class CarpetImage(models.Model):
         ordering = ['order', 'created_at']
 
 
+# Модель для изображений новости
+def news_image_upload_to(instance, filename):
+    """Путь для загрузки изображений новости"""
+    return os.path.join('photos/news', f'news_{instance.news.id}', filename)
+
+
+class NewsImage(models.Model):
+    """Изображение для новости"""
+    news = models.ForeignKey(
+        'News',
+        on_delete=models.CASCADE,
+        related_name='images',
+        verbose_name='Новость'
+    )
+    image = models.ImageField(
+        upload_to=news_image_upload_to,
+        verbose_name='Изображение'
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    
+    def __str__(self):
+        return f"Изображение {self.order} - {self.news.title or f'Новость #{self.news.id}'}"
+    
+    class Meta:
+        verbose_name = 'Изображение новости'
+        verbose_name_plural = 'Изображения новости'
+        ordering = ['order', 'created_at']
+
+
 # Модель для новостей
 class News(models.Model):
     title = models.CharField(max_length=200, verbose_name='Заголовок')
     slug = models.SlugField(unique=True, null=True, blank=True, verbose_name='Slug', editable=False)
-    description = models.TextField(blank=True, null=True, verbose_name='Краткое описание')
-    content = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name='Содержание',
-        help_text='Полное содержание новости. Поддерживает HTML (CKEditor)'
-    )
+    
+    # Обложка
     cover_image = models.ImageField(
         upload_to='photos/news/%Y/%m/', 
-        verbose_name='Главное изображение', 
+        verbose_name='Обложка', 
         blank=True, 
         null=True,
-        help_text='Изображение для превью новости'
+        help_text='Главное изображение новости'
     )
+    
+    # Абзацы с форматированием (CKEditor)
+    paragraph_1 = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Абзац 1',
+        help_text='Первый абзац новости. Поддерживает форматирование через CKEditor (жирный, курсив, ссылки, списки и т.д.)'
+    )
+    paragraph_2 = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Абзац 2',
+        help_text='Второй абзац новости. Поддерживает форматирование через CKEditor (жирный, курсив, ссылки, списки и т.д.)'
+    )
+    
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    
+    # SEO поля
+    seo_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='SEO Title',
+        help_text='Заголовок страницы для поисковых систем (рекомендуется до 60 символов)'
+    )
+    seo_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='SEO Description',
+        help_text='Описание страницы для поисковых систем (рекомендуется до 160 символов)'
+    )
 
     def save(self, *args, **kwargs):
         # Автогенерация slug из title_uz (основной язык) или title, если title_uz не заполнен
@@ -418,6 +490,22 @@ class Gallery(models.Model):
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    
+    # SEO поля
+    seo_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='SEO Title',
+        help_text='Заголовок страницы для поисковых систем (рекомендуется до 60 символов)'
+    )
+    seo_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='SEO Description',
+        help_text='Описание страницы для поисковых систем (рекомендуется до 160 символов)'
+    )
 
     def __str__(self):
         return self.title or f'Изображение #{self.id}'
@@ -1160,3 +1248,90 @@ class AdvantageCard(models.Model):
         verbose_name = 'Карточка преимущества'
         verbose_name_plural = 'Карточки преимуществ'
         ordering = ['order']
+
+
+# Модель для глобальных настроек
+class GlobalSettings(models.Model):
+    """Модель глобальных настроек сайта (singleton)"""
+    
+    # Копирайт (мультиязычный)
+    copyright = models.CharField(
+        max_length=200,
+        verbose_name='Копирайт',
+        help_text='Текст копирайта в футере сайта'
+    )
+    
+    # Модальное окно формы (мультиязычные поля)
+    form_modal_title = models.CharField(
+        max_length=200,
+        verbose_name='Заголовок модального окна формы',
+        help_text='Заголовок модального окна для формы обратной связи'
+    )
+    form_modal_text = models.TextField(
+        verbose_name='Текст модального окна формы',
+        help_text='Текст в модальном окне для формы обратной связи'
+    )
+    
+    # Модальное окно успеха (мультиязычные поля)
+    success_modal_title = models.CharField(
+        max_length=200,
+        verbose_name='Заголовок модального окна успеха',
+        help_text='Заголовок модального окна после успешной отправки формы'
+    )
+    success_modal_text = models.TextField(
+        verbose_name='Текст модального окна успеха',
+        help_text='Текст в модальном окне после успешной отправки формы'
+    )
+    
+    # Контактная информация
+    email = models.EmailField(
+        verbose_name='Email',
+        help_text='Email для связи'
+    )
+    address = models.TextField(
+        verbose_name='Адрес',
+        help_text='Адрес компании'
+    )
+    phone = models.CharField(
+        max_length=50,
+        verbose_name='Номер телефона',
+        help_text='Номер телефона для связи'
+    )
+    
+    # 3D тур
+    tour_3d_link = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name='Ссылка на 3D тур',
+        help_text='Ссылка на 3D тур (опционально)'
+    )
+    
+    # Обложки страниц
+    collection_cover_image = models.ImageField(
+        upload_to='photos/global_settings/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Обложка страницы коллекции',
+        help_text='Изображение обложки для страницы коллекций'
+    )
+    product_cover_image = models.ImageField(
+        upload_to='photos/global_settings/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Обложка страницы продуктов',
+        help_text='Изображение обложки для страницы продуктов'
+    )
+    
+    # Служебные поля
+    is_published = models.BooleanField(default=True, verbose_name='Публикация')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    
+    def __str__(self):
+        return 'Глобальные настройки'
+    
+    class Meta:
+        verbose_name = 'Глобальные настройки'
+        verbose_name_plural = 'Глобальные настройки'
+        ordering = ['-created_at']

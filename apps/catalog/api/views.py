@@ -21,6 +21,7 @@ from apps.catalog.models import (
     ContactPage,
     FAQ,
     Gallery,
+    GlobalSettings,
     HomePage,
     MainGallery,
     News,
@@ -41,6 +42,7 @@ from .serializers import (
     ContactPageSerializer,
     FAQSerializer,
     GallerySerializer,
+    GlobalSettingsSerializer,
     HomePageSerializer,
     MainGallerySerializer,
     NewsDetailSerializer,
@@ -412,3 +414,20 @@ class AdvantageCardViewSet(ListModelMixin, GenericViewSet):
     @extend_schema(parameters=[LANG_PARAMETER])
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+
+@extend_schema(tags=["Глобальные настройки"])
+class GlobalSettingsViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для глобальных настроек"""
+    queryset = GlobalSettings.objects.filter(is_published=True)
+    serializer_class = GlobalSettingsSerializer
+    pagination_class = None
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        """Возвращает первый опубликованный объект глобальных настроек"""
+        instance = self.get_queryset().first()
+        if instance:
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        return Response({}, status=status.HTTP_200_OK)

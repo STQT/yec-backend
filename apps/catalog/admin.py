@@ -17,9 +17,11 @@ from apps.catalog.models import (
     ContactPage,
     FAQ,
     Gallery,
+    GlobalSettings,
     HomePage,
     MainGallery,
     News,
+    NewsImage,
     ProductionStep,
     Region,
     Room,
@@ -297,13 +299,33 @@ class CarpetAdmin(admin.ModelAdmin):
     photo_preview.short_description = "Превью"
 
 
+class NewsImageInline(admin.StackedInline):
+    """Inline для изображений новости"""
+    model = NewsImage
+    extra = 1
+    fields = ["image", "order", "image_preview"]
+    readonly_fields = ["image_preview"]
+    ordering = ["order"]
+    
+    def image_preview(self, obj):
+        """Превью изображения"""
+        if obj and obj.image:
+            return format_html(
+                '<img src="{}" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px;"/>',
+                obj.image.url
+            )
+        return "-"
+    image_preview.short_description = "Превью"
+
+
 @admin.register(News)
 class NewsAdmin(admin.ModelAdmin):
     """Админка для новостей с CKEditor"""
+    inlines = [NewsImageInline]
     list_display = ["cover_image_preview", "title", "slug", "is_published", "created_at"]
     list_display_links = ["title"]
     list_filter = ["is_published", "created_at"]
-    search_fields = ["title", "description"]
+    search_fields = ["title_uz", "title_ru", "title_en"]
     readonly_fields = ["cover_image_preview", "created_at", "update_at"]
     date_hierarchy = "created_at"
     
@@ -311,16 +333,27 @@ class NewsAdmin(admin.ModelAdmin):
         ("Основная информация", {
             "fields": ("title_uz", "title_ru", "title_en")
         }),
-        ("Описание", {
-            "fields": ("description_uz", "description_ru", "description_en")
-        }),
-        ("Содержание", {
-            "fields": ("content_uz", "content_ru", "content_en"),
-            "description": "Полное содержание новости. Поддерживает HTML (CKEditor)"
-        }),
-        ("Главное изображение", {
+        ("Обложка", {
             "fields": ("cover_image", "cover_image_preview"),
-            "description": "Изображение для превью новости в списке"
+            "description": "Главное изображение новости"
+        }),
+        ("Абзац 1", {
+            "fields": ("paragraph_1_uz", "paragraph_1_ru", "paragraph_1_en"),
+            "description": "Первый абзац новости. Поддерживает форматирование через CKEditor (жирный, курсив, ссылки, списки и т.д.)"
+        }),
+        ("Абзац 2", {
+            "fields": ("paragraph_2_uz", "paragraph_2_ru", "paragraph_2_en"),
+            "description": "Второй абзац новости. Поддерживает форматирование через CKEditor (жирный, курсив, ссылки, списки и т.д.)"
+        }),
+        ("SEO", {
+            "fields": (
+                "seo_title_uz",
+                "seo_title_ru",
+                "seo_title_en",
+                "seo_description_uz",
+                "seo_description_ru",
+                "seo_description_en",
+            )
         }),
         ("Настройки", {
             "fields": ("is_published",)
@@ -332,7 +365,7 @@ class NewsAdmin(admin.ModelAdmin):
     
     class Media:
         js = (
-            'https://cdn.ckeditor.com/4.25.1-lts/standard/ckeditor.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js',
             'js/ckeditor_init.js',
         )
     
@@ -344,14 +377,14 @@ class NewsAdmin(admin.ModelAdmin):
         return readonly
 
     def cover_image_preview(self, obj):
-        """Превью главного изображения"""
-        if obj.cover_image:
+        """Превью обложки"""
+        if obj and obj.cover_image:
             return format_html(
                 '<img src="{}" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px;"/>',
                 obj.cover_image.url
             )
         return "-"
-    cover_image_preview.short_description = "Превью"
+    cover_image_preview.short_description = "Превью обложки"
 
 
 @admin.register(Gallery)
@@ -1406,6 +1439,121 @@ class FAQAdmin(admin.ModelAdmin):
         """Сокращенный вопрос"""
         return obj.question[:80] + "..." if len(obj.question) > 80 else obj.question
     question_short.short_description = "Вопрос"
+
+
+@admin.register(GlobalSettings)
+class GlobalSettingsAdmin(admin.ModelAdmin):
+    """Админка для глобальных настроек (singleton)"""
+    list_display = ["__str__", "is_published", "created_at"]
+    list_display_links = ["__str__"]
+    list_filter = ["is_published", "created_at"]
+    readonly_fields = [
+        "collection_cover_image_preview",
+        "product_cover_image_preview",
+        "created_at",
+        "update_at"
+    ]
+    date_hierarchy = "created_at"
+    
+    fieldsets = (
+        # ========== КОПИРАЙТ ==========
+        ("Копирайт", {
+            "fields": (
+                "copyright_uz",
+                "copyright_ru",
+                "copyright_en",
+            )
+        }),
+        # ========== МОДАЛЬНОЕ ОКНО ФОРМЫ ==========
+        ("Модальное окно формы", {
+            "fields": (
+                "form_modal_title_uz",
+                "form_modal_title_ru",
+                "form_modal_title_en",
+                "form_modal_text_uz",
+                "form_modal_text_ru",
+                "form_modal_text_en",
+            )
+        }),
+        # ========== МОДАЛЬНОЕ ОКНО УСПЕХА ==========
+        ("Модальное окно успеха", {
+            "fields": (
+                "success_modal_title_uz",
+                "success_modal_title_ru",
+                "success_modal_title_en",
+                "success_modal_text_uz",
+                "success_modal_text_ru",
+                "success_modal_text_en",
+            )
+        }),
+        # ========== КОНТАКТНАЯ ИНФОРМАЦИЯ ==========
+        ("Контактная информация", {
+            "fields": (
+                "email",
+                "phone",
+                "address_uz",
+                "address_ru",
+                "address_en",
+            )
+        }),
+        # ========== 3D ТУР ==========
+        ("Tour 3D", {
+            "fields": ("tour_3d_link",),
+            "description": "Ссылка на 3D тур"
+        }),
+        # ========== ОБЛОЖКИ СТРАНИЦ ==========
+        ("Обложки страниц", {
+            "fields": (
+                "collection_cover_image",
+                "collection_cover_image_preview",
+                "product_cover_image",
+                "product_cover_image_preview",
+            )
+        }),
+        # ========== НАСТРОЙКИ ==========
+        ("Настройки", {
+            "fields": ("is_published", "created_at", "update_at"),
+        }),
+    )
+    
+    def changelist_view(self, request, extra_context=None):
+        """Перенаправляем на форму редактирования, если есть запись, или на создание"""
+        obj = GlobalSettings.objects.first()
+        if obj:
+            return HttpResponseRedirect(
+                reverse('admin:catalog_globalsettings_change', args=[obj.pk])
+            )
+        return HttpResponseRedirect(
+            reverse('admin:catalog_globalsettings_add')
+        )
+    
+    def has_add_permission(self, request):
+        """Разрешаем добавление только если нет записей"""
+        return GlobalSettings.objects.count() == 0
+    
+    def has_delete_permission(self, request, obj=None):
+        """Запрещаем удаление, так как должна быть только одна запись"""
+        return False
+    
+    def collection_cover_image_preview(self, obj):
+        """Превью обложки страницы коллекции"""
+        if obj and obj.collection_cover_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.collection_cover_image.url
+            )
+        return "-"
+    collection_cover_image_preview.short_description = "Превью обложки коллекции"
+    
+    def product_cover_image_preview(self, obj):
+        """Превью обложки страницы продуктов"""
+        if obj and obj.product_cover_image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 4px;"/>',
+                obj.product_cover_image.url
+            )
+        return "-"
+    product_cover_image_preview.short_description = "Превью обложки продуктов"
 
 
 # AdvantageCard управляется через inline на главной странице - не нужна отдельная админка

@@ -13,9 +13,11 @@ from apps.catalog.models import (
     ContactPage,
     FAQ,
     Gallery,
+    GlobalSettings,
     HomePage,
     MainGallery,
     News,
+    NewsImage,
     ProductionStep,
     Region,
     Room,
@@ -192,6 +194,9 @@ class CollectionDetailSerializer(serializers.ModelSerializer):
             "is_new",
             "created_at",
             "update_at",
+            # SEO поля
+            "seo_title",
+            "seo_description",
         ]
         read_only_fields = ["id", "slug", "created_at", "update_at"]
     
@@ -207,6 +212,18 @@ class CollectionDetailSerializer(serializers.ModelSerializer):
             lang_suffix = f"_{language}" if language else ""
             
             for field in ['name', 'description']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    elif not representation.get(field):
+                        representation[field] = getattr(instance, field, None)
+                else:
+                    representation[field] = getattr(instance, field, None)
+            
+            # SEO поля
+            for field in ['seo_title', 'seo_description']:
                 lang_field = f"{field}{lang_suffix}"
                 if hasattr(instance, lang_field):
                     lang_value = getattr(instance, lang_field, None)
@@ -393,6 +410,16 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
 
 
 
+class NewsImageSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображений новости"""
+    image = ImageFieldSerializer(required=False, allow_null=True)
+    
+    class Meta:
+        model = NewsImage
+        fields = ["id", "image", "order"]
+        read_only_fields = ["id"]
+
+
 class NewsListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка новостей"""
     cover_image = ImageFieldSerializer(required=False, allow_null=True)
@@ -403,31 +430,10 @@ class NewsListSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "slug",
-            "description",
             "cover_image",
             "created_at",
         ]
         read_only_fields = ["id", "slug", "created_at"]
-
-
-class NewsDetailSerializer(serializers.ModelSerializer):
-    """Сериализатор для детальной информации о новости"""
-    cover_image = ImageFieldSerializer(required=False, allow_null=True)
-
-    class Meta:
-        model = News
-        fields = [
-            "id",
-            "title",
-            "slug",
-            "description",
-            "content",
-            "cover_image",
-            "is_published",
-            "created_at",
-            "update_at",
-        ]
-        read_only_fields = ["id", "slug", "created_at", "update_at"]
     
     def to_representation(self, instance):
         """Возвращает данные на языке из query параметра lang"""
@@ -436,11 +442,93 @@ class NewsDetailSerializer(serializers.ModelSerializer):
         
         if request:
             language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"title{lang_suffix}"
             
-            if language and language != "uz":
-                representation["title"] = getattr(instance, f"title_{language}", instance.title)
-                representation["description"] = getattr(instance, f"description_{language}", instance.description)
-                representation["content"] = getattr(instance, f"content_{language}", instance.content)
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["title"] = lang_value
+                elif not representation.get("title"):
+                    representation["title"] = instance.title
+            else:
+                representation["title"] = instance.title
+        
+        return representation
+
+
+class NewsDetailSerializer(serializers.ModelSerializer):
+    """Сериализатор для детальной информации о новости"""
+    cover_image = ImageFieldSerializer(required=False, allow_null=True)
+    images = serializers.SerializerMethodField()
+
+    class Meta:
+        model = News
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "cover_image",
+            "paragraph_1",
+            "paragraph_2",
+            "images",
+            "is_published",
+            "created_at",
+            "update_at",
+            # SEO поля
+            "seo_title",
+            "seo_description",
+        ]
+        read_only_fields = ["id", "slug", "created_at", "update_at"]
+    
+    def get_images(self, obj):
+        """Получить список изображений новости"""
+        images = obj.images.all().order_by('order')
+        return NewsImageSerializer(images, many=True, context=self.context).data
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
+            
+            # Title
+            lang_field = f"title{lang_suffix}"
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["title"] = lang_value
+                elif not representation.get("title"):
+                    representation["title"] = instance.title
+            else:
+                representation["title"] = instance.title
+            
+            # Paragraphs
+            for field in ['paragraph_1', 'paragraph_2']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    elif not representation.get(field):
+                        representation[field] = getattr(instance, field, None)
+                else:
+                    representation[field] = getattr(instance, field, None)
+            
+            # SEO поля
+            for field in ['seo_title', 'seo_description']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    elif not representation.get(field):
+                        representation[field] = getattr(instance, field, None)
+                else:
+                    representation[field] = getattr(instance, field, None)
         
         return representation
 
@@ -457,8 +545,45 @@ class GallerySerializer(serializers.ModelSerializer):
             "image",
             "created_at",
             "order",
+            # SEO поля
+            "seo_title",
+            "seo_description",
         ]
         read_only_fields = ["id", "created_at"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
+            
+            # Поле title
+            lang_field = f"title{lang_suffix}"
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["title"] = lang_value
+                elif not representation.get("title"):
+                    representation["title"] = instance.title
+            else:
+                representation["title"] = instance.title
+            
+            # SEO поля
+            for field in ['seo_title', 'seo_description']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    elif not representation.get(field):
+                        representation[field] = getattr(instance, field, None)
+                else:
+                    representation[field] = getattr(instance, field, None)
+        
+        return representation
 
 
 class MainGallerySerializer(serializers.ModelSerializer):
@@ -548,6 +673,9 @@ class HomePageSerializer(serializers.ModelSerializer):
     # Секция 5: Призыв к действию
     cta_image = ImageFieldSerializer(required=False, allow_null=True)
     
+    # SEO поля
+    og_image = ImageFieldSerializer(required=False, allow_null=True)
+    
     class Meta:
         model = HomePage
         fields = [
@@ -587,6 +715,14 @@ class HomePageSerializer(serializers.ModelSerializer):
             "cta_title",
             "cta_description",
             "cta_image",
+            # SEO поля
+            "meta_title",
+            "meta_description",
+            "meta_keywords",
+            "og_title",
+            "og_description",
+            "og_image",
+            "canonical_url",
         ]
         read_only_fields = ["id"]
     
@@ -660,6 +796,18 @@ class HomePageSerializer(serializers.ModelSerializer):
             # Секция 5: Призыв к действию
             multilingual_fields_cta = ['cta_title', 'cta_description']
             for field in multilingual_fields_cta:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+            
+            # SEO поля
+            multilingual_fields_seo = [
+                'meta_title', 'meta_description', 'meta_keywords',
+                'og_title', 'og_description', 'canonical_url'
+            ]
+            for field in multilingual_fields_seo:
                 lang_field = f"{field}{lang_suffix}"
                 if hasattr(instance, lang_field):
                     value = getattr(instance, lang_field)
@@ -739,6 +887,9 @@ class AboutPageSerializer(serializers.ModelSerializer):
     # Динамические секции
     production_steps = serializers.SerializerMethodField()
     company_history = serializers.SerializerMethodField()
+    
+    # SEO поля
+    og_image = ImageFieldSerializer(required=False, allow_null=True)
 
     class Meta:
         model = AboutPage
@@ -781,6 +932,14 @@ class AboutPageSerializer(serializers.ModelSerializer):
             "dealer_card_2_description",
             "dealer_card_3_title",
             "dealer_card_3_description",
+            # SEO поля
+            "meta_title",
+            "meta_description",
+            "meta_keywords",
+            "og_title",
+            "og_description",
+            "og_image",
+            "canonical_url",
         ]
         read_only_fields = ["id"]
     
@@ -879,12 +1038,26 @@ class AboutPageSerializer(serializers.ModelSerializer):
                     value = getattr(instance, lang_field)
                     if value:
                         representation[field] = value
+            
+            # SEO поля
+            multilingual_fields_seo = [
+                'meta_title', 'meta_description', 'meta_keywords',
+                'og_title', 'og_description', 'canonical_url'
+            ]
+            for field in multilingual_fields_seo:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
         
         return representation
 
 
 class ContactPageSerializer(serializers.ModelSerializer):
     """Сериализатор для страницы контактов"""
+    # SEO поля
+    og_image = ImageFieldSerializer(required=False, allow_null=True)
     
     class Meta:
         model = ContactPage
@@ -904,6 +1077,14 @@ class ContactPageSerializer(serializers.ModelSerializer):
             "twitter_url",
             "linkedin_url",
             "instagram_url",
+            # SEO поля
+            "meta_title",
+            "meta_description",
+            "meta_keywords",
+            "og_title",
+            "og_description",
+            "og_image",
+            "canonical_url",
         ]
         read_only_fields = ["id"]
     
@@ -923,6 +1104,19 @@ class ContactPageSerializer(serializers.ModelSerializer):
                 representation["email_label"] = getattr(instance, f"email_label_{language}", instance.email_label)
                 representation["form_title"] = getattr(instance, f"form_title_{language}", instance.form_title)
                 representation["form_description"] = getattr(instance, f"form_description_{language}", instance.form_description)
+            
+            # SEO поля
+            multilingual_fields_seo = [
+                'meta_title', 'meta_description', 'meta_keywords',
+                'og_title', 'og_description', 'canonical_url'
+            ]
+            lang_suffix = f"_{language}" if language else ""
+            for field in multilingual_fields_seo:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
         
         return representation
 
@@ -1076,5 +1270,60 @@ class AdvantageCardSerializer(serializers.ModelSerializer):
             if language and language != "uz":
                 representation["title"] = getattr(instance, f"title_{language}", instance.title)
                 representation["description"] = getattr(instance, f"description_{language}", instance.description)
+        
+        return representation
+
+
+class GlobalSettingsSerializer(serializers.ModelSerializer):
+    """Сериализатор для глобальных настроек"""
+    collection_cover_image = ImageFieldSerializer(required=False, allow_null=True)
+    product_cover_image = ImageFieldSerializer(required=False, allow_null=True)
+    
+    class Meta:
+        model = GlobalSettings
+        fields = [
+            "id",
+            "copyright",
+            "form_modal_title",
+            "form_modal_text",
+            "success_modal_title",
+            "success_modal_text",
+            "email",
+            "address",
+            "phone",
+            "tour_3d_link",
+            "collection_cover_image",
+            "product_cover_image",
+            "is_published",
+            "created_at",
+            "update_at",
+        ]
+        read_only_fields = ["id", "created_at", "update_at"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            lang_suffix = f"_{language}" if language else ""
+            
+            # Мультиязычные поля
+            multilingual_fields = [
+                'copyright',
+                'form_modal_title',
+                'form_modal_text',
+                'success_modal_title',
+                'success_modal_text',
+                'address',
+            ]
+            
+            for field in multilingual_fields:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
         
         return representation

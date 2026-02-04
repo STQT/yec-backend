@@ -8,6 +8,8 @@ from apps.catalog.models import (
     CompanyHistory,
     ContactPage,
     FAQ,
+    Gallery,
+    GlobalSettings,
     HomePage,
     MainGallery,
     News,
@@ -132,7 +134,7 @@ class CompanyHistoryTranslationOptions(TranslationOptions):
 @register(News)
 class NewsTranslationOptions(TranslationOptions):
     """Настройки переводов для новостей"""
-    fields = ('title', 'description', 'content')
+    fields = ('title', 'paragraph_1', 'paragraph_2', 'seo_title', 'seo_description')
     required_languages = ('uz',)
 
 
@@ -210,7 +212,14 @@ class ColorTranslationOptions(TranslationOptions):
 @register(Collection)
 class CollectionTranslationOptions(TranslationOptions):
     """Настройки переводов для коллекций"""
-    fields = ('name', 'description')
+    fields = ('name', 'description', 'seo_title', 'seo_description')
+    required_languages = ('uz',)
+
+
+@register(Gallery)
+class GalleryTranslationOptions(TranslationOptions):
+    """Настройки переводов для галереи"""
+    fields = ('title', 'seo_title', 'seo_description')
     required_languages = ('uz',)
 
 
@@ -218,4 +227,18 @@ class CollectionTranslationOptions(TranslationOptions):
 class CarpetTranslationOptions(TranslationOptions):
     """Настройки переводов для характеристик ковра"""
     fields = ('code', 'material', 'density', 'base', 'pile_height', 'yarn_composition', 'weight')
+    required_languages = ('uz',)
+
+
+@register(GlobalSettings)
+class GlobalSettingsTranslationOptions(TranslationOptions):
+    """Настройки переводов для глобальных настроек"""
+    fields = (
+        'copyright',
+        'form_modal_title',
+        'form_modal_text',
+        'success_modal_title',
+        'success_modal_text',
+        'address',
+    )
     required_languages = ('uz',)
