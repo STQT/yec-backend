@@ -54,6 +54,16 @@ class CollectionAdmin(admin.ModelAdmin):
         ("Изображение", {
             "fields": ("image", "image_preview")
         }),
+        ("SEO", {
+            "fields": (
+                "seo_title_uz",
+                "seo_title_ru",
+                "seo_title_en",
+                "seo_description_uz",
+                "seo_description_ru",
+                "seo_description_en",
+            )
+        }),
         ("Настройки", {
             "fields": ("is_published", "is_new")
         }),
@@ -375,6 +385,42 @@ class NewsAdmin(admin.ModelAdmin):
         if obj:  # Если объект существует, показываем slug
             readonly.append("slug")
         return readonly
+    
+    def save_model(self, request, obj, form, change):
+        """Переопределяем сохранение для обработки ошибок"""
+        # Убеждаемся, что slug всегда валидный перед сохранением
+        if not obj.slug or not obj.slug.strip():
+            from apps.catalog.models import generate_unique_slug
+            import random
+            source_title = getattr(obj, 'title_uz', None) or getattr(obj, 'title', None)
+            if source_title:
+                obj.slug = generate_unique_slug(type(obj), str(source_title).strip(), obj.pk)
+            if not obj.slug or not obj.slug.strip():
+                obj.slug = f"news-{random.randint(10000, 99999)}"
+        
+        try:
+            super().save_model(request, obj, form, change)
+        except Exception as e:
+            # Если произошла ошибка при сохранении, логируем и показываем пользователю
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Ошибка при сохранении новости: {str(e)}", exc_info=True)
+            # Если slug пустой или None, генерируем его заново
+            if not obj.slug or not obj.slug.strip():
+                from apps.catalog.models import generate_unique_slug
+                import random
+                source_title = getattr(obj, 'title_uz', None) or getattr(obj, 'title', None)
+                if source_title:
+                    obj.slug = generate_unique_slug(type(obj), str(source_title).strip(), obj.pk)
+                if not obj.slug or not obj.slug.strip():
+                    obj.slug = f"news-{random.randint(10000, 99999)}"
+            # Пытаемся сохранить снова
+            try:
+                super().save_model(request, obj, form, change)
+            except Exception as e2:
+                # Если все еще ошибка, пробрасываем её дальше
+                logger.error(f"Критическая ошибка при сохранении новости: {str(e2)}", exc_info=True)
+                raise
 
     def cover_image_preview(self, obj):
         """Превью обложки"""
@@ -393,15 +439,30 @@ class GalleryAdmin(admin.ModelAdmin):
     list_display = ["image_preview", "title", "order", "is_published", "created_at"]
     list_display_links = ["title", "image_preview"]
     list_filter = ["is_published", "created_at"]
-    search_fields = ["title"]
+    search_fields = ["title_uz", "title_ru", "title_en"]
     readonly_fields = ["image_preview", "created_at"]
     list_editable = ["order", "is_published"]
     fieldsets = (
         ("Основная информация", {
-            "fields": ("title", "order")
+            "fields": (
+                "title_uz",
+                "title_ru",
+                "title_en",
+                "order"
+            )
         }),
         ("Изображение", {
             "fields": ("image", "image_preview")
+        }),
+        ("SEO", {
+            "fields": (
+                "seo_title_uz",
+                "seo_title_ru",
+                "seo_title_en",
+                "seo_description_uz",
+                "seo_description_ru",
+                "seo_description_en",
+            )
         }),
         ("Настройки", {
             "fields": ("is_published",)

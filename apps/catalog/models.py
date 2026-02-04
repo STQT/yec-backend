@@ -3,6 +3,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 import os
+import re
+import random
 
 
 def generate_unique_slug(model_class, source_text, current_pk=None, current_slug=None):
@@ -21,7 +23,29 @@ def generate_unique_slug(model_class, source_text, current_pk=None, current_slug
     if not source_text:
         return None
     
+    # Преобразуем в строку и очищаем
+    source_text = str(source_text).strip()
+    if not source_text:
+        return None
+    
     new_slug = slugify(source_text)
+    
+    # Если slugify вернул пустую строку (например, только числа или спецсимволы),
+    # создаем slug из исходного текста с заменой недопустимых символов
+    if not new_slug:
+        # Заменяем все недопустимые символы на дефисы и удаляем лишние
+        new_slug = re.sub(r'[^\w\s-]', '', source_text)
+        new_slug = re.sub(r'[-\s]+', '-', new_slug)
+        new_slug = new_slug.strip('-').lower()
+        
+        # Если все еще пусто, используем fallback
+        if not new_slug:
+            # Используем префикс модели и текущий PK или случайное число
+            model_name = model_class.__name__.lower()
+            if current_pk:
+                new_slug = f"{model_name}-{current_pk}"
+            else:
+                new_slug = f"{model_name}-{random.randint(10000, 99999)}"
     
     # Проверяем уникальность и добавляем число если нужно
     original_slug = new_slug
@@ -36,6 +60,9 @@ def generate_unique_slug(model_class, source_text, current_pk=None, current_slug
         if current_pk:
             queryset = queryset.exclude(pk=current_pk)
         counter += 1
+        # Защита от бесконечного цикла
+        if counter > 1000:
+            break
     
     return new_slug
 
@@ -448,7 +475,13 @@ class News(models.Model):
 
     def save(self, *args, **kwargs):
         # Автогенерация slug из title_uz (основной язык) или title, если title_uz не заполнен
-        source_title = getattr(self, 'title_uz', None) or self.title
+        source_title = getattr(self, 'title_uz', None) or getattr(self, 'title', None)
+        
+        # Преобразуем в строку и проверяем, что не пусто
+        if source_title:
+            source_title = str(source_title).strip()
+            if not source_title:
+                source_title = None
         
         if source_title:
             need_update_slug = False
@@ -458,14 +491,31 @@ class News(models.Model):
             elif self.pk:
                 try:
                     old_obj = News.objects.get(pk=self.pk)
-                    old_title = getattr(old_obj, 'title_uz', None) or old_obj.title
+                    old_title = getattr(old_obj, 'title_uz', None) or getattr(old_obj, 'title', None)
+                    if old_title:
+                        old_title = str(old_title).strip()
+                        if not old_title:
+                            old_title = None
                     if old_title != source_title:
                         need_update_slug = True
                 except News.DoesNotExist:
                     need_update_slug = True
             
             if need_update_slug:
-                self.slug = generate_unique_slug(News, source_title, self.pk)
+                generated_slug = generate_unique_slug(News, source_title, self.pk)
+                # generate_unique_slug всегда возвращает валидный slug или None
+                if generated_slug:
+                    self.slug = generated_slug
+                else:
+                    # Если по какой-то причине slug не сгенерирован, создаем fallback
+                    self.slug = f"news-{random.randint(10000, 99999)}"
+        elif not self.slug:
+            # Если title пустой и slug нет, создаем fallback slug
+            self.slug = f"news-{random.randint(10000, 99999)}"
+        
+        # Убеждаемся, что slug всегда валидный перед сохранением
+        if not self.slug or not self.slug.strip():
+            self.slug = f"news-{random.randint(10000, 99999)}"
         
         super().save(*args, **kwargs)
 
