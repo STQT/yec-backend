@@ -3,6 +3,8 @@ from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
     Carpet,
+    CarpetCharacteristic,
+    Characteristic,
     Collection,
     Color,
     CompanyHistory,
@@ -225,8 +227,22 @@ class GalleryTranslationOptions(TranslationOptions):
 
 @register(Carpet)
 class CarpetTranslationOptions(TranslationOptions):
-    """Настройки переводов для характеристик ковра"""
-    fields = ('code', 'material', 'density', 'base', 'pile_height', 'yarn_composition', 'weight')
+    """Настройки переводов для ковра"""
+    fields = ('code',)
+    required_languages = ('uz',)
+
+
+@register(Characteristic)
+class CharacteristicTranslationOptions(TranslationOptions):
+    """Настройки переводов для характеристик"""
+    fields = ('name',)
+    required_languages = ('uz',)
+
+
+@register(CarpetCharacteristic)
+class CarpetCharacteristicTranslationOptions(TranslationOptions):
+    """Настройки переводов для значений характеристик ковра"""
+    fields = ('value',)
     required_languages = ('uz',)
 
 

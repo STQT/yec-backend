@@ -9,7 +9,9 @@ from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
     Carpet,
+    CarpetCharacteristic,
     CarpetImage,
+    Characteristic,
     Collection,
     Color,
     CompanyHistory,
@@ -151,6 +153,41 @@ class RoomAdmin(admin.ModelAdmin):
     carpets_count.short_description = "Количество ковров"
 
 
+@admin.register(Characteristic)
+class CharacteristicAdmin(admin.ModelAdmin):
+    """Админка для справочника характеристик"""
+    list_display = ["name", "order", "is_active", "carpets_count", "created_at"]
+    list_display_links = ["name"]
+    list_filter = ["is_active", "created_at"]
+    search_fields = ["name"]
+    list_editable = ["order", "is_active"]
+    readonly_fields = ["carpets_count", "created_at", "update_at"]
+    
+    fieldsets = (
+        ("Название характеристики", {
+            "fields": (
+                "name_uz",
+                "name_ru",
+                "name_en",
+            )
+        }),
+        ("Настройки", {
+            "fields": ("order", "is_active")
+        }),
+        ("Статистика", {
+            "fields": ("carpets_count",)
+        }),
+        ("Даты", {
+            "fields": ("created_at", "update_at")
+        }),
+    )
+    
+    def carpets_count(self, obj):
+        """Количество ковров с этой характеристикой"""
+        return obj.carpet_values.count()
+    carpets_count.short_description = "Количество ковров"
+
+
 @admin.register(Color)
 class ColorAdmin(admin.ModelAdmin):
     """Админка для цветов"""
@@ -214,15 +251,23 @@ class CarpetImageInline(admin.StackedInline):
     image_preview.short_description = "Превью"
 
 
+class CarpetCharacteristicInline(admin.StackedInline):
+    """Inline для характеристик ковра"""
+    model = CarpetCharacteristic
+    extra = 1
+    fields = ["characteristic", "value_uz", "value_ru", "value_en", "order"]
+    ordering = ["order", "characteristic__order"]
+    autocomplete_fields = ["characteristic"]
+
+
 @admin.register(Carpet)
 class CarpetAdmin(admin.ModelAdmin):
     """Админка для ковров"""
-    inlines = [CarpetImageInline]
+    inlines = [CarpetCharacteristicInline, CarpetImageInline]
     list_display = [
         "photo_preview",
         "code",
         "collection",
-        "material",
         "is_new",
         "is_popular",
         "is_published",
@@ -241,7 +286,7 @@ class CarpetAdmin(admin.ModelAdmin):
         "roll",
         "created_at"
     ]
-    search_fields = ["code", "material", "collection__name"]
+    search_fields = ["code", "collection__name"]
     readonly_fields = [
         "photo_preview",
         "watched",
@@ -262,28 +307,6 @@ class CarpetAdmin(admin.ModelAdmin):
         }),
         ("Изображение", {
             "fields": ("photo", "photo_preview")
-        }),
-        ("Характеристики", {
-            "fields": (
-                "material_uz",
-                "material_ru",
-                "material_en",
-                "density_uz",
-                "density_ru",
-                "density_en",
-                "base_uz",
-                "base_ru",
-                "base_en",
-                "pile_height_uz",
-                "pile_height_ru",
-                "pile_height_en",
-                "yarn_composition_uz",
-                "yarn_composition_ru",
-                "yarn_composition_en",
-                "weight_uz",
-                "weight_ru",
-                "weight_en"
-            )
         }),
         ("Фильтры", {
             "fields": ("styles", "rooms", "colors", "is_new", "is_popular")

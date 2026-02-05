@@ -314,6 +314,56 @@ class Color(models.Model):
         verbose_name_plural = 'Цвета'
 
 
+# Модель для справочника характеристик
+class Characteristic(models.Model):
+    """Справочник характеристик продуктов"""
+    name = models.CharField(max_length=200, verbose_name='Название характеристики',
+                           help_text='Например: Материал, Плотность, Основа и т.д.')
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    is_active = models.BooleanField(default=True, verbose_name='Активна')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = 'Характеристика'
+        verbose_name_plural = 'Характеристики'
+        ordering = ['order', 'name']
+
+
+# Модель для связи ковра с характеристиками
+class CarpetCharacteristic(models.Model):
+    """Связь ковра с характеристикой и её значением"""
+    carpet = models.ForeignKey(
+        'Carpet',
+        on_delete=models.CASCADE,
+        related_name='characteristics',
+        verbose_name='Ковер'
+    )
+    characteristic = models.ForeignKey(
+        Characteristic,
+        on_delete=models.CASCADE,
+        related_name='carpet_values',
+        verbose_name='Характеристика'
+    )
+    value = models.CharField(max_length=500, blank=True, null=True, verbose_name='Значение',
+                            help_text='Значение характеристики для данного ковра')
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    update_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    
+    class Meta:
+        verbose_name = 'Характеристика ковра'
+        verbose_name_plural = 'Характеристики ковра'
+        ordering = ['order', 'characteristic__order']
+        unique_together = [['carpet', 'characteristic']]  # Одна характеристика на ковер
+    
+    def __str__(self):
+        return f"{self.carpet.code or f'Ковер #{self.carpet.id}'} - {self.characteristic.name}"
+
+
 # Модель Carpet с дополнениями из Figma
 class Carpet(models.Model):
     code = models.CharField(max_length=32, verbose_name='Код Ковра', blank=True, null=True)
@@ -325,20 +375,6 @@ class Carpet(models.Model):
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, verbose_name='Коллекция',
                                    related_name='carpets')
     roll = models.BooleanField(default=False, verbose_name='Рулон')
-    
-    # Новые поля из Figma
-    material = models.CharField(max_length=200, blank=True, null=True, verbose_name='Материал',
-                                help_text='Например: jun va ipak (шерсть и шелк)')
-    density = models.CharField(max_length=100, blank=True, null=True, verbose_name='Плотность',
-                               help_text='Например: 1 m² ga 2880000 tugun')
-    base = models.CharField(max_length=100, blank=True, null=True, verbose_name='Основа',
-                            help_text='Например: paxta (хлопок)')
-    pile_height = models.CharField(max_length=20, blank=True, null=True, verbose_name='Высота ворса',
-                                   help_text='Например: 5mm')
-    yarn_composition = models.CharField(max_length=100, blank=True, null=True, verbose_name='Состав нити',
-                                        help_text='Например: 100%modal')
-    weight = models.CharField(max_length=100, blank=True, null=True, verbose_name='Вес',
-                              help_text='Например: 2850 gr/m² (+/-7%)')
     
     # Флаги для фильтрации
     is_new = models.BooleanField(default=False, verbose_name='Новый')

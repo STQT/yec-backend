@@ -5,7 +5,9 @@ from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
     Carpet,
+    CarpetCharacteristic,
     CarpetImage,
+    Characteristic,
     Collection,
     Color,
     CompanyHistory,
@@ -238,6 +240,77 @@ class CollectionDetailSerializer(serializers.ModelSerializer):
         return representation
 
 
+class CharacteristicSerializer(serializers.ModelSerializer):
+    """Сериализатор для характеристик"""
+    
+    class Meta:
+        model = Characteristic
+        fields = ["id", "name", "order"]
+        read_only_fields = ["id"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            # Всегда используем языковые поля, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"name{lang_suffix}"
+            
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["name"] = lang_value
+                elif not representation.get("name"):
+                    representation["name"] = instance.name
+            else:
+                representation["name"] = instance.name
+        
+        return representation
+
+
+class CarpetCharacteristicSerializer(serializers.ModelSerializer):
+    """Сериализатор для характеристик ковра"""
+    characteristic = CharacteristicSerializer(read_only=True)
+    characteristic_id = serializers.PrimaryKeyRelatedField(
+        queryset=Characteristic.objects.filter(is_active=True),
+        source='characteristic',
+        write_only=True,
+        required=False
+    )
+    
+    class Meta:
+        model = CarpetCharacteristic
+        fields = ["id", "characteristic", "characteristic_id", "value", "order"]
+        read_only_fields = ["id"]
+    
+    def to_representation(self, instance):
+        """Возвращает данные на языке из query параметра lang"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+        
+        if request:
+            language = get_language_from_request(request)
+            
+            # Всегда используем языковые поля для value, если они доступны
+            lang_suffix = f"_{language}" if language else ""
+            lang_field = f"value{lang_suffix}"
+            
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["value"] = lang_value
+                elif not representation.get("value"):
+                    representation["value"] = instance.value
+            else:
+                representation["value"] = instance.value
+        
+        return representation
+
+
 class CarpetImageSerializer(serializers.ModelSerializer):
     """Сериализатор для изображений галереи ковра"""
     image = ImageFieldSerializer(required=False, allow_null=True)
@@ -257,6 +330,7 @@ class CarpetListSerializer(serializers.ModelSerializer):
     colors = ColorSerializer(many=True, read_only=True)
     photo = ImageFieldSerializer(required=False, allow_null=True)
     gallery_images = serializers.SerializerMethodField()
+    characteristics = serializers.SerializerMethodField()
 
     class Meta:
         model = Carpet
@@ -266,18 +340,13 @@ class CarpetListSerializer(serializers.ModelSerializer):
             "photo",
             "collection_name",
             "collection_slug",
-            "material",
-            "density",
-            "base",
-            "pile_height",
-            "yarn_composition",
-            "weight",
             "roll",
             "is_new",
             "is_popular",
             "styles",
             "rooms",
             "colors",
+            "characteristics",
             "gallery_images",
             "watched",
             "created_at",
@@ -288,6 +357,11 @@ class CarpetListSerializer(serializers.ModelSerializer):
         """Получить список изображений галереи ковра"""
         images = obj.gallery_images.all().order_by('order')
         return CarpetImageSerializer(images, many=True, context=self.context).data
+    
+    def get_characteristics(self, obj):
+        """Получить список характеристик ковра"""
+        characteristics = obj.characteristics.all().order_by('order', 'characteristic__order')
+        return CarpetCharacteristicSerializer(characteristics, many=True, context=self.context).data
     
     def get_collection_name(self, obj):
         """Получить название коллекции на нужном языке"""
@@ -313,26 +387,18 @@ class CarpetListSerializer(serializers.ModelSerializer):
         if request:
             language = get_language_from_request(request)
             
-            # Всегда используем языковые поля, если они доступны
-            # Для uz используем code_uz, material_uz и т.д., если они есть
+            # Всегда используем языковые поля для code, если они доступны
             lang_suffix = f"_{language}" if language else ""
+            lang_field = f"code{lang_suffix}"
             
-            # Получаем значение с учетом языка, если поле существует
-            multilingual_fields = ['code', 'material', 'density', 'base', 'pile_height', 'yarn_composition', 'weight']
-            
-            for field in multilingual_fields:
-                lang_field = f"{field}{lang_suffix}"
-                # Проверяем, существует ли языковое поле и есть ли в нем значение
-                if hasattr(instance, lang_field):
-                    lang_value = getattr(instance, lang_field, None)
-                    if lang_value:
-                        representation[field] = lang_value
-                    # Если языковое поле пустое, используем базовое поле как fallback
-                    elif not representation.get(field):
-                        representation[field] = getattr(instance, field, None)
-                else:
-                    # Если языкового поля нет, используем базовое поле
-                    representation[field] = getattr(instance, field, None)
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["code"] = lang_value
+                elif not representation.get("code"):
+                    representation["code"] = instance.code
+            else:
+                representation["code"] = instance.code
         
         return representation
 
@@ -345,6 +411,7 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
     colors = ColorSerializer(many=True, read_only=True)
     photo = ImageFieldSerializer(required=False, allow_null=True)
     gallery_images = serializers.SerializerMethodField()
+    characteristics = serializers.SerializerMethodField()
 
     class Meta:
         model = Carpet
@@ -353,18 +420,13 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
             "code",
             "photo",
             "collection",
-            "material",
-            "density",
-            "base",
-            "pile_height",
-            "yarn_composition",
-            "weight",
             "is_new",
             "is_popular",
             "roll",
             "styles",
             "rooms",
             "colors",
+            "characteristics",
             "gallery_images",
             "watched",
             "is_published",
@@ -378,6 +440,11 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
         images = obj.gallery_images.all().order_by('order')
         return CarpetImageSerializer(images, many=True, context=self.context).data
     
+    def get_characteristics(self, obj):
+        """Получить список характеристик ковра"""
+        characteristics = obj.characteristics.all().order_by('order', 'characteristic__order')
+        return CarpetCharacteristicSerializer(characteristics, many=True, context=self.context).data
+    
     def to_representation(self, instance):
         """Возвращает данные на языке из query параметра lang"""
         representation = super().to_representation(instance)
@@ -386,25 +453,18 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
         if request:
             language = get_language_from_request(request)
             
-            # Всегда используем языковые поля, если они доступны
+            # Всегда используем языковые поля для code, если они доступны
             lang_suffix = f"_{language}" if language else ""
+            lang_field = f"code{lang_suffix}"
             
-            # Получаем значение с учетом языка, если поле существует
-            multilingual_fields = ['code', 'material', 'density', 'base', 'pile_height', 'yarn_composition', 'weight']
-            
-            for field in multilingual_fields:
-                lang_field = f"{field}{lang_suffix}"
-                # Проверяем, существует ли языковое поле и есть ли в нем значение
-                if hasattr(instance, lang_field):
-                    lang_value = getattr(instance, lang_field, None)
-                    if lang_value:
-                        representation[field] = lang_value
-                    # Если языковое поле пустое, используем базовое поле как fallback
-                    elif not representation.get(field):
-                        representation[field] = getattr(instance, field, None)
-                else:
-                    # Если языкового поля нет, используем базовое поле
-                    representation[field] = getattr(instance, field, None)
+            if hasattr(instance, lang_field):
+                lang_value = getattr(instance, lang_field, None)
+                if lang_value:
+                    representation["code"] = lang_value
+                elif not representation.get("code"):
+                    representation["code"] = instance.code
+            else:
+                representation["code"] = instance.code
         
         return representation
 

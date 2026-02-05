@@ -5,6 +5,7 @@ from .views import (
     AboutPageViewSet,
     AdvantageCardViewSet,
     CarpetViewSet,
+    CharacteristicViewSet,
     CollectionViewSet,
     ColorViewSet,
     ContactFormSubmissionViewSet,
@@ -27,6 +28,7 @@ router.register("collections", CollectionViewSet, basename="collection")
 router.register("styles", StyleViewSet, basename="style")
 router.register("rooms", RoomViewSet, basename="room")
 router.register("colors", ColorViewSet, basename="color")
+router.register("characteristics", CharacteristicViewSet, basename="characteristic")
 router.register("news", NewsViewSet, basename="news")
 router.register("gallery", GalleryViewSet, basename="gallery")
 router.register("main-gallery", MainGalleryViewSet, basename="main-gallery")

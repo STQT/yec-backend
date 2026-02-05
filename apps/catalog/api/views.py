@@ -15,6 +15,8 @@ from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
     Carpet,
+    CarpetCharacteristic,
+    Characteristic,
     Collection,
     Color,
     ContactFormSubmission,
@@ -34,8 +36,10 @@ from apps.catalog.models import (
 from .serializers import (
     AboutPageSerializer,
     AdvantageCardSerializer,
+    CarpetCharacteristicSerializer,
     CarpetDetailSerializer,
     CarpetListSerializer,
+    CharacteristicSerializer,
     CollectionDetailSerializer,
     CollectionListSerializer,
     ColorSerializer,
@@ -115,18 +119,17 @@ class CarpetFilter(filters.FilterSet):
     )
     is_new = filters.BooleanFilter(field_name="is_new")
     is_popular = filters.BooleanFilter(field_name="is_popular")
-    material = filters.CharFilter(field_name="material", lookup_expr="icontains")
 
     class Meta:
         model = Carpet
-        fields = ["styles", "rooms", "colors", "collection", "is_new", "is_popular", "material"]
+        fields = ["styles", "rooms", "colors", "collection", "is_new", "is_popular"]
 
 
 @extend_schema(tags=["Ковры"])
 class CarpetViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     """ViewSet для ковров"""
     queryset = Carpet.objects.filter(is_published=True).select_related("collection").prefetch_related(
-        "styles", "rooms", "colors", "gallery_images"
+        "styles", "rooms", "colors", "gallery_images", "characteristics__characteristic"
     )
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -209,7 +212,9 @@ class CollectionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         collection = self.get_object()
         carpets = Carpet.objects.filter(
             collection=collection, is_published=True
-        ).select_related("collection").prefetch_related("styles", "rooms", "colors", "gallery_images")
+        ).select_related("collection").prefetch_related(
+            "styles", "rooms", "colors", "gallery_images", "characteristics__characteristic"
+        )
         
         # Применяем фильтры из запроса
         filter_backend = DjangoFilterBackend()
@@ -255,6 +260,18 @@ class ColorViewSet(ListModelMixin, GenericViewSet):
     """ViewSet для цветов"""
     queryset = Color.objects.all()
     serializer_class = ColorSerializer
+    pagination_class = None
+    
+    @extend_schema(parameters=[LANG_PARAMETER])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+
+@extend_schema(tags=["Характеристики"])
+class CharacteristicViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для справочника характеристик"""
+    queryset = Characteristic.objects.filter(is_active=True)
+    serializer_class = CharacteristicSerializer
     pagination_class = None
     
     @extend_schema(parameters=[LANG_PARAMETER])
