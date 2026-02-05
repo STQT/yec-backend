@@ -15,6 +15,7 @@ from apps.catalog.models import (
     Gallery,
     GlobalSettings,
     HomePage,
+    InstagramPost,
     MainGallery,
     News,
     NewsImage,
@@ -545,9 +546,6 @@ class GallerySerializer(serializers.ModelSerializer):
             "image",
             "created_at",
             "order",
-            # SEO поля
-            "seo_title",
-            "seo_description",
         ]
         read_only_fields = ["id", "created_at"]
     
@@ -570,18 +568,6 @@ class GallerySerializer(serializers.ModelSerializer):
                     representation["title"] = instance.title
             else:
                 representation["title"] = instance.title
-            
-            # SEO поля
-            for field in ['seo_title', 'seo_description']:
-                lang_field = f"{field}{lang_suffix}"
-                if hasattr(instance, lang_field):
-                    lang_value = getattr(instance, lang_field, None)
-                    if lang_value:
-                        representation[field] = lang_value
-                    elif not representation.get(field):
-                        representation[field] = getattr(instance, field, None)
-                else:
-                    representation[field] = getattr(instance, field, None)
         
         return representation
 
@@ -1274,6 +1260,28 @@ class AdvantageCardSerializer(serializers.ModelSerializer):
         return representation
 
 
+class InstagramPostSerializer(serializers.ModelSerializer):
+    """Сериализатор для постов Instagram"""
+    
+    class Meta:
+        model = InstagramPost
+        fields = [
+            "id",
+            "instagram_id",
+            "post_type",
+            "caption",
+            "permalink",
+            "thumbnail_url",
+            "media_url",
+            "like_count",
+            "comments_count",
+            "timestamp",
+            "is_published",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
 class GlobalSettingsSerializer(serializers.ModelSerializer):
     """Сериализатор для глобальных настроек"""
     collection_cover_image = ImageFieldSerializer(required=False, allow_null=True)
@@ -1294,6 +1302,13 @@ class GlobalSettingsSerializer(serializers.ModelSerializer):
             "tour_3d_link",
             "collection_cover_image",
             "product_cover_image",
+            # SEO поля для страниц
+            "collections_seo_title",
+            "collections_seo_description",
+            "news_seo_title",
+            "news_seo_description",
+            "gallery_seo_title",
+            "gallery_seo_description",
             "is_published",
             "created_at",
             "update_at",
@@ -1317,6 +1332,13 @@ class GlobalSettingsSerializer(serializers.ModelSerializer):
                 'success_modal_title',
                 'success_modal_text',
                 'address',
+                # SEO поля
+                'collections_seo_title',
+                'collections_seo_description',
+                'news_seo_title',
+                'news_seo_description',
+                'gallery_seo_title',
+                'gallery_seo_description',
             ]
             
             for field in multilingual_fields:

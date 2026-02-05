@@ -13,6 +13,7 @@ from .views import (
     GalleryViewSet,
     GlobalSettingsViewSet,
     HomePageViewSet,
+    InstagramPostViewSet,
     MainGalleryViewSet,
     NewsViewSet,
     RegionViewSet,
@@ -37,6 +38,7 @@ router.register("contact-form", ContactFormSubmissionViewSet, basename="contact-
 router.register("faq", FAQViewSet, basename="faq")
 router.register("advantages", AdvantageCardViewSet, basename="advantage")
 router.register("global-settings", GlobalSettingsViewSet, basename="global-settings")
+router.register("instagram-posts", InstagramPostViewSet, basename="instagram-post")
 
 app_name = "catalog_api"
 urlpatterns = router.urls

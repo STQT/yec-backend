@@ -479,3 +479,16 @@ JAZZMIN_UI_TWEAKS = {
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+# Instagram API Settings
+# ------------------------------------------------------------------------------
+# Для работы с Instagram Graph API требуется:
+# 1. Instagram Business или Creator аккаунт
+# 2. Facebook App с подключенным Instagram
+# 3. Access Token с правами: instagram_basic, pages_read_engagement
+# 
+# Инструкция по получению токена:
+# https://developers.facebook.com/docs/instagram-api/getting-started
+INSTAGRAM_USERNAME = env("INSTAGRAM_USERNAME", default="yecgilam")
+INSTAGRAM_ACCESS_TOKEN = env("INSTAGRAM_ACCESS_TOKEN", default=None)
+INSTAGRAM_BUSINESS_ACCOUNT_ID = env("INSTAGRAM_BUSINESS_ACCOUNT_ID", default=None)

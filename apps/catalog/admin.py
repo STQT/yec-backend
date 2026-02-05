@@ -19,6 +19,7 @@ from apps.catalog.models import (
     Gallery,
     GlobalSettings,
     HomePage,
+    InstagramPost,
     MainGallery,
     News,
     NewsImage,
@@ -453,16 +454,6 @@ class GalleryAdmin(admin.ModelAdmin):
         }),
         ("Изображение", {
             "fields": ("image", "image_preview")
-        }),
-        ("SEO", {
-            "fields": (
-                "seo_title_uz",
-                "seo_title_ru",
-                "seo_title_en",
-                "seo_description_uz",
-                "seo_description_ru",
-                "seo_description_en",
-            )
         }),
         ("Настройки", {
             "fields": ("is_published",)
@@ -1571,6 +1562,37 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
                 "product_cover_image_preview",
             )
         }),
+        # ========== SEO ПОЛЯ ==========
+        ("SEO - Страница Коллекции", {
+            "fields": (
+                "collections_seo_title_uz",
+                "collections_seo_title_ru",
+                "collections_seo_title_en",
+                "collections_seo_description_uz",
+                "collections_seo_description_ru",
+                "collections_seo_description_en",
+            )
+        }),
+        ("SEO - Страница Новости", {
+            "fields": (
+                "news_seo_title_uz",
+                "news_seo_title_ru",
+                "news_seo_title_en",
+                "news_seo_description_uz",
+                "news_seo_description_ru",
+                "news_seo_description_en",
+            )
+        }),
+        ("SEO - Страница Галерея", {
+            "fields": (
+                "gallery_seo_title_uz",
+                "gallery_seo_title_ru",
+                "gallery_seo_title_en",
+                "gallery_seo_description_uz",
+                "gallery_seo_description_ru",
+                "gallery_seo_description_en",
+            )
+        }),
         # ========== НАСТРОЙКИ ==========
         ("Настройки", {
             "fields": ("is_published", "created_at", "update_at"),
@@ -1587,14 +1609,6 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
         return HttpResponseRedirect(
             reverse('admin:catalog_globalsettings_add')
         )
-    
-    def has_add_permission(self, request):
-        """Разрешаем добавление только если нет записей"""
-        return GlobalSettings.objects.count() == 0
-    
-    def has_delete_permission(self, request, obj=None):
-        """Запрещаем удаление, так как должна быть только одна запись"""
-        return False
     
     def collection_cover_image_preview(self, obj):
         """Превью обложки страницы коллекции"""
@@ -1615,6 +1629,106 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
             )
         return "-"
     product_cover_image_preview.short_description = "Превью обложки продуктов"
+
+
+@admin.register(InstagramPost)
+class InstagramPostAdmin(admin.ModelAdmin):
+    """Админка для постов Instagram"""
+    list_display = [
+        "thumbnail_preview",
+        "instagram_id",
+        "post_type",
+        "caption_preview",
+        "like_count",
+        "comments_count",
+        "timestamp",
+        "is_published",
+        "created_at",
+    ]
+    list_display_links = ["thumbnail_preview", "instagram_id"]
+    list_filter = ["post_type", "is_published", "timestamp", "created_at"]
+    search_fields = ["instagram_id", "caption"]
+    readonly_fields = [
+        "instagram_id",
+        "post_type",
+        "caption",
+        "permalink",
+        "thumbnail_url",
+        "media_url",
+        "like_count",
+        "comments_count",
+        "timestamp",
+        "created_at",
+        "updated_at",
+        "thumbnail_preview",
+        "media_preview",
+    ]
+    date_hierarchy = "timestamp"
+    fieldsets = (
+        ("Основная информация", {
+            "fields": (
+                "instagram_id",
+                "post_type",
+                "caption",
+                "permalink",
+                "timestamp",
+            )
+        }),
+        ("Медиа", {
+            "fields": (
+                "thumbnail_url",
+                "thumbnail_preview",
+                "media_url",
+                "media_preview",
+            )
+        }),
+        ("Метрики", {
+            "fields": (
+                "like_count",
+                "comments_count",
+            )
+        }),
+        ("Настройки", {
+            "fields": (
+                "is_published",
+                "created_at",
+                "updated_at",
+            )
+        }),
+    )
+    
+    def thumbnail_preview(self, obj):
+        """Превью миниатюры"""
+        if obj.thumbnail_url:
+            return format_html(
+                '<img src="{}" style="max-width: 100px; max-height: 100px;" />',
+                obj.thumbnail_url
+            )
+        return "-"
+    thumbnail_preview.short_description = "Миниатюра"
+    
+    def media_preview(self, obj):
+        """Превью медиа"""
+        if obj.media_url:
+            if obj.post_type == 'VIDEO':
+                return format_html(
+                    '<video src="{}" controls style="max-width: 300px; max-height: 300px;" />',
+                    obj.media_url
+                )
+            else:
+                return format_html(
+                    '<img src="{}" style="max-width: 300px; max-height: 300px;" />',
+                    obj.media_url
+                )
+        return "-"
+    media_preview.short_description = "Медиа"
+    
+    def caption_preview(self, obj):
+        """Превью подписи (первые 50 символов)"""
+        if obj.caption:
+            return obj.caption[:50] + "..." if len(obj.caption) > 50 else obj.caption
+        return "-"
+    caption_preview.short_description = "Подпись"
 
 
 # AdvantageCard управляется через inline на главной странице - не нужна отдельная админка

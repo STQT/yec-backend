@@ -23,6 +23,7 @@ from apps.catalog.models import (
     Gallery,
     GlobalSettings,
     HomePage,
+    InstagramPost,
     MainGallery,
     News,
     Region,
@@ -44,6 +45,7 @@ from .serializers import (
     GallerySerializer,
     GlobalSettingsSerializer,
     HomePageSerializer,
+    InstagramPostSerializer,
     MainGallerySerializer,
     NewsDetailSerializer,
     NewsListSerializer,
@@ -413,6 +415,18 @@ class AdvantageCardViewSet(ListModelMixin, GenericViewSet):
     
     @extend_schema(parameters=[LANG_PARAMETER])
     def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+
+@extend_schema(tags=["Instagram"])
+class InstagramPostViewSet(ListModelMixin, GenericViewSet):
+    """ViewSet для постов Instagram"""
+    queryset = InstagramPost.objects.filter(is_published=True)
+    serializer_class = InstagramPostSerializer
+    pagination_class = StandardResultsSetPagination
+    
+    def list(self, request, *args, **kwargs):
+        """Возвращает список опубликованных постов Instagram, отсортированных по дате"""
         return super().list(request, *args, **kwargs)
 
 

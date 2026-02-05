@@ -540,22 +540,6 @@ class Gallery(models.Model):
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     order = models.PositiveIntegerField(default=0, verbose_name='Порядок сортировки')
-    
-    # SEO поля
-    seo_title = models.CharField(
-        max_length=70,
-        blank=True,
-        null=True,
-        verbose_name='SEO Title',
-        help_text='Заголовок страницы для поисковых систем (рекомендуется до 60 символов)'
-    )
-    seo_description = models.TextField(
-        max_length=160,
-        blank=True,
-        null=True,
-        verbose_name='SEO Description',
-        help_text='Описание страницы для поисковых систем (рекомендуется до 160 символов)'
-    )
 
     def __str__(self):
         return self.title or f'Изображение #{self.id}'
@@ -1373,6 +1357,54 @@ class GlobalSettings(models.Model):
         help_text='Изображение обложки для страницы продуктов'
     )
     
+    # SEO поля для страницы Коллекции
+    collections_seo_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='SEO Title (Коллекции)',
+        help_text='SEO заголовок для страницы коллекций'
+    )
+    collections_seo_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='SEO Description (Коллекции)',
+        help_text='SEO описание для страницы коллекций'
+    )
+    
+    # SEO поля для страницы Новости
+    news_seo_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='SEO Title (Новости)',
+        help_text='SEO заголовок для страницы новостей'
+    )
+    news_seo_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='SEO Description (Новости)',
+        help_text='SEO описание для страницы новостей'
+    )
+    
+    # SEO поля для страницы Галерея
+    gallery_seo_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='SEO Title (Галерея)',
+        help_text='SEO заголовок для страницы галереи'
+    )
+    gallery_seo_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='SEO Description (Галерея)',
+        help_text='SEO описание для страницы галереи'
+    )
+    
     # Служебные поля
     is_published = models.BooleanField(default=True, verbose_name='Публикация')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
@@ -1385,3 +1417,99 @@ class GlobalSettings(models.Model):
         verbose_name = 'Глобальные настройки'
         verbose_name_plural = 'Глобальные настройки'
         ordering = ['-created_at']
+
+
+# Модель для постов Instagram
+class InstagramPost(models.Model):
+    """Модель для хранения постов из Instagram"""
+    POST_TYPE_CHOICES = [
+        ('IMAGE', 'Изображение'),
+        ('VIDEO', 'Видео'),
+        ('CAROUSEL_ALBUM', 'Карусель'),
+    ]
+    
+    # ID поста в Instagram
+    instagram_id = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name='Instagram ID',
+        help_text='Уникальный идентификатор поста в Instagram'
+    )
+    
+    # Тип поста
+    post_type = models.CharField(
+        max_length=20,
+        choices=POST_TYPE_CHOICES,
+        verbose_name='Тип поста'
+    )
+    
+    # Основная информация
+    caption = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Подпись',
+        help_text='Текст подписи к посту'
+    )
+    permalink = models.URLField(
+        max_length=500,
+        verbose_name='Ссылка на пост',
+        help_text='Прямая ссылка на пост в Instagram'
+    )
+    thumbnail_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name='URL миниатюры',
+        help_text='URL изображения миниатюры'
+    )
+    media_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name='URL медиа',
+        help_text='URL основного изображения или видео'
+    )
+    
+    # Метрики
+    like_count = models.IntegerField(
+        default=0,
+        verbose_name='Количество лайков'
+    )
+    comments_count = models.IntegerField(
+        default=0,
+        verbose_name='Количество комментариев'
+    )
+    
+    # Дата публикации в Instagram
+    timestamp = models.DateTimeField(
+        verbose_name='Дата публикации',
+        help_text='Дата и время публикации поста в Instagram'
+    )
+    
+    # Служебные поля
+    is_published = models.BooleanField(
+        default=True,
+        verbose_name='Публикация',
+        help_text='Показывать пост на сайте'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания записи'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Дата обновления записи'
+    )
+    
+    def __str__(self):
+        return f"Instagram Post: {self.instagram_id}"
+    
+    class Meta:
+        verbose_name = 'Пост Instagram'
+        verbose_name_plural = 'Посты Instagram'
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['instagram_id']),
+            models.Index(fields=['-timestamp']),
+            models.Index(fields=['is_published', '-timestamp']),
+        ]

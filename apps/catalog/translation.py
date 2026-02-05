@@ -219,7 +219,7 @@ class CollectionTranslationOptions(TranslationOptions):
 @register(Gallery)
 class GalleryTranslationOptions(TranslationOptions):
     """Настройки переводов для галереи"""
-    fields = ('title', 'seo_title', 'seo_description')
+    fields = ('title',)
     required_languages = ('uz',)
 
 
@@ -240,5 +240,12 @@ class GlobalSettingsTranslationOptions(TranslationOptions):
         'success_modal_title',
         'success_modal_text',
         'address',
+        # SEO поля для страниц
+        'collections_seo_title',
+        'collections_seo_description',
+        'news_seo_title',
+        'news_seo_description',
+        'gallery_seo_title',
+        'gallery_seo_description',
     )
     required_languages = ('uz',)
