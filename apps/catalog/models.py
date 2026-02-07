@@ -1487,19 +1487,19 @@ class InstagramPost(models.Model):
         help_text='Текст подписи к посту'
     )
     permalink = models.URLField(
-        max_length=500,
+        max_length=2000,
         verbose_name='Ссылка на пост',
         help_text='Прямая ссылка на пост в Instagram'
     )
     thumbnail_url = models.URLField(
-        max_length=500,
+        max_length=2000,
         blank=True,
         null=True,
         verbose_name='URL миниатюры',
         help_text='URL изображения миниатюры'
     )
     media_url = models.URLField(
-        max_length=500,
+        max_length=2000,
         blank=True,
         null=True,
         verbose_name='URL медиа',

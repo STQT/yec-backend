@@ -1322,6 +1322,7 @@ class AdvantageCardSerializer(serializers.ModelSerializer):
 
 class InstagramPostSerializer(serializers.ModelSerializer):
     """Сериализатор для постов Instagram"""
+    post_type_display = serializers.CharField(source='get_post_type_display', read_only=True)
     
     class Meta:
         model = InstagramPost
@@ -1329,6 +1330,7 @@ class InstagramPostSerializer(serializers.ModelSerializer):
             "id",
             "instagram_id",
             "post_type",
+            "post_type_display",
             "caption",
             "permalink",
             "thumbnail_url",
