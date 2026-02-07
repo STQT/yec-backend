@@ -70,17 +70,88 @@ pip install instaloader==4.10.3
 
 ### Настройка в Django
 
-Добавьте только username в ваш `.env` файл или в настройки Django:
+Добавьте username в ваш `.env` файл или в настройки Django:
 
 ```env
 INSTAGRAM_USERNAME=yecgilam
+```
+
+Для использования авторизации (рекомендуется для избежания блокировок):
+
+```env
+INSTAGRAM_USERNAME=yecgilam
+INSTAGRAM_LOGIN_USERNAME=your_instagram_account
+INSTAGRAM_LOGIN_PASSWORD=your_password  # Опционально, лучше использовать сессию
 ```
 
 Или добавьте в `config/settings/local.py`:
 
 ```python
 INSTAGRAM_USERNAME = "yecgilam"
+INSTAGRAM_LOGIN_USERNAME = "your_instagram_account"  # Для авторизации
 ```
+
+### Настройка сессии в Docker
+
+Для Docker окружения (local и production) сессия Instagram сохраняется в Docker volume и не теряется при перезапуске контейнера или обновлении кода.
+
+**Преимущества:**
+- ✅ Сессия сохраняется между перезапусками контейнера
+- ✅ Сессия сохраняется при обновлении кода
+- ✅ Не нужно создавать сессию заново после каждого деплоя
+- ✅ Безопасное хранение в Docker volume
+
+#### 1. Создание сессии (один раз)
+
+**Для production:**
+```bash
+docker compose -f docker-compose.production.yml run --rm django python manage.py create_instagram_session --username YOUR_INSTAGRAM_USERNAME
+```
+
+**Для local разработки:**
+```bash
+docker compose -f docker-compose.local.yml run --rm django python manage.py create_instagram_session --username YOUR_INSTAGRAM_USERNAME
+```
+
+Введите пароль, когда будет запрошен. Сессия будет сохранена в Docker volume:
+- Production: `production_instaloader_sessions`
+- Local: `apps_local_instaloader_sessions`
+
+#### 2. Использование сессии при синхронизации
+
+После создания сессии, она будет автоматически использоваться при синхронизации:
+
+**Production:**
+```bash
+docker compose -f docker-compose.production.yml run --rm django python manage.py sync_instagram_posts_opensource --login-username YOUR_INSTAGRAM_USERNAME
+```
+
+**Local:**
+```bash
+docker compose -f docker-compose.local.yml run --rm django python manage.py sync_instagram_posts_opensource --login-username YOUR_INSTAGRAM_USERNAME
+```
+
+**Или через настройки в `.env`:**
+
+Добавьте в `.envs/.production/.django` (или `.envs/.local/.django`):
+```env
+INSTAGRAM_LOGIN_USERNAME=YOUR_INSTAGRAM_USERNAME
+```
+
+Тогда команда будет использовать сессию автоматически без указания `--login-username`:
+
+```bash
+docker compose -f docker-compose.production.yml run --rm django python manage.py sync_instagram_posts_opensource
+```
+
+#### 3. Проверка сохранения сессии
+
+Сессия сохраняется в Docker volume и будет доступна после:
+- Перезапуска контейнера
+- Обновления кода
+- Пересборки образа
+
+Volume монтируется в `/app/.config/instaloader` внутри контейнера.
 
 ### Синхронизация постов
 
@@ -131,7 +202,93 @@ def sync_instagram_opensource():
 0 * * * * cd /path/to/project && docker compose -f docker-compose.local.yml run --rm django python manage.py sync_instagram_posts_opensource --limit 12
 ```
 
+### Работа с отдельного сервера (решение проблемы 429 Too Many Requests)
+
+Если ваш основной сервер заблокирован Instagram (ошибка 429), можно запускать синхронизацию на отдельном сервере (например, в Узбекистане) и передавать данные через JSON или API.
+
+#### Вариант 1: Использование отдельного скрипта с сохранением в JSON
+
+1. **На сервере в Узбекистане** установите зависимости:
+```bash
+pip install instaloader requests
+```
+
+2. **Скопируйте скрипт** `scripts/sync_instagram_standalone.py` на сервер
+
+3. **Создайте сессию Instagram (рекомендуется для избежания блокировок):**
+```bash
+instaloader -l YOUR_INSTAGRAM_USERNAME
+# Введите пароль, сессия будет сохранена
+```
+
+4. **Запустите скрипт** для получения постов:
+
+**С авторизацией (рекомендуется):**
+```bash
+python sync_instagram_standalone.py \
+  --username yecgilam \
+  --limit 12 \
+  --login-username YOUR_INSTAGRAM_USERNAME \
+  --delay 5.0 \
+  --output instagram_posts.json
+```
+
+**Без авторизации (может быть заблокирован):**
+```bash
+python sync_instagram_standalone.py --username yecgilam --limit 12 --output instagram_posts.json --delay 3.0
+```
+
+**С прокси (если IP заблокирован):**
+```bash
+python sync_instagram_standalone.py \
+  --username yecgilam \
+  --limit 12 \
+  --proxy http://proxy.example.com:8080 \
+  --delay 5.0 \
+  --output instagram_posts.json
+```
+
+4. **Скопируйте JSON файл** на основной сервер
+
+5. **На основном сервере** импортируйте данные:
+```bash
+docker compose -f docker-compose.local.yml run --rm django python manage.py import_instagram_from_json instagram_posts.json
+```
+
+Или с обновлением существующих постов:
+```bash
+docker compose -f docker-compose.local.yml run --rm django python manage.py import_instagram_from_json instagram_posts.json --update
+```
+
+#### Вариант 2: Отправка данных напрямую через API
+
+1. **На сервере в Узбекистане** запустите скрипт с отправкой через API:
+```bash
+python sync_instagram_standalone.py \
+  --username yecgilam \
+  --limit 12 \
+  --api-url https://your-api-domain.com/api/instagram-posts/ \
+  --api-token YOUR_API_TOKEN \
+  --delay 3.0
+```
+
+**Примечание:** Для работы через API нужно создать endpoint для создания постов (сейчас только чтение). Альтернативно используйте вариант 1 с JSON.
+
+#### Автоматизация через cron
+
+На сервере в Узбекистане можно настроить автоматический запуск:
+
+```bash
+# Добавьте в crontab (синхронизация каждый час)
+0 * * * * cd /path/to/scripts && python sync_instagram_standalone.py --username yecgilam --limit 12 --output /tmp/instagram_posts.json --delay 3.0 && scp /tmp/instagram_posts.json user@main-server:/tmp/ && ssh user@main-server "cd /path/to/project && docker compose run --rm django python manage.py import_instagram_from_json /tmp/instagram_posts.json"
+```
+
 ### Устранение неполадок (Open Source)
+
+**Ошибка: "429 Too Many Requests"**
+- Instagram заблокировал IP-адрес вашего сервера
+- Решение: Используйте отдельный скрипт на другом сервере (см. раздел выше)
+- Увеличьте задержку между запросами: `--delay 5.0` или больше
 
 **Ошибка: "Profile not found"**
 - Проверьте правильность username

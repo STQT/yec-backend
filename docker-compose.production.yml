@@ -4,6 +4,7 @@ volumes:
   production_traefik: {}
   production_django_media: {}
   production_django_static: {}
+  production_instaloader_sessions: {}
 
 
 services:
@@ -16,6 +17,7 @@ services:
     volumes:
       - production_django_media:/app/apps/media
       - production_django_static:/app/staticfiles
+      - production_instaloader_sessions:/app/.config/instaloader
     depends_on:
       - postgres
       - redis
