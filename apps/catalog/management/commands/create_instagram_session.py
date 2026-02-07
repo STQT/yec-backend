@@ -93,8 +93,48 @@ class Command(BaseCommand):
                     'Ошибка: Требуется двухфакторная аутентификация.\n'
                     'Для аккаунтов с 2FA используйте временный код доступа или отключите 2FA.'
                 )
+            except instaloader.exceptions.ConnectionException as e:
+                error_msg = str(e)
+                if "Checkpoint required" in error_msg or "challenge" in error_msg.lower():
+                    # Извлекаем URL проверки из сообщения об ошибке
+                    import re
+                    challenge_url_match = re.search(r'https://www\.instagram\.com[^\s]+', error_msg)
+                    challenge_url = challenge_url_match.group(0) if challenge_url_match else None
+                    
+                    raise CommandError(
+                        'Ошибка: Instagram требует проверку безопасности (Checkpoint).\n\n'
+                        'Решение:\n'
+                        '1. Откройте ссылку проверки в браузере (желательно на том же устройстве/IP):\n'
+                        f'   {challenge_url if challenge_url else "Ссылка в сообщении об ошибке"}\n'
+                        '2. Пройдите проверку безопасности в браузере\n'
+                        '3. Подождите 10-15 минут после прохождения проверки\n'
+                        '4. Попробуйте создать сессию снова\n\n'
+                        'Альтернативный способ:\n'
+                        '1. Войдите в Instagram через браузер на том же IP-адресе\n'
+                        '2. Используйте Instagram App на мобильном устройстве\n'
+                        '3. Подождите несколько часов и попробуйте снова\n'
+                        '4. Используйте другой аккаунт Instagram для авторизации'
+                    )
+                else:
+                    raise CommandError(f'Ошибка подключения: {str(e)}')
             except Exception as e:
-                raise CommandError(f'Ошибка при создании сессии: {str(e)}')
+                error_msg = str(e)
+                if "Checkpoint required" in error_msg or "challenge" in error_msg.lower():
+                    import re
+                    challenge_url_match = re.search(r'https://www\.instagram\.com[^\s]+', error_msg)
+                    challenge_url = challenge_url_match.group(0) if challenge_url_match else None
+                    
+                    raise CommandError(
+                        'Ошибка: Instagram требует проверку безопасности (Checkpoint).\n\n'
+                        'Решение:\n'
+                        '1. Откройте ссылку проверки в браузере:\n'
+                        f'   {challenge_url if challenge_url else "Ссылка в сообщении об ошибке"}\n'
+                        '2. Пройдите проверку безопасности\n'
+                        '3. Подождите 10-15 минут и попробуйте снова\n\n'
+                        'Или используйте другой аккаунт Instagram.'
+                    )
+                else:
+                    raise CommandError(f'Ошибка при создании сессии: {str(e)}')
             finally:
                 os.chdir(original_dir)
                 
