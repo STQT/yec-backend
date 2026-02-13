@@ -1,6 +1,6 @@
 # Translations for the Yec project
 # Copyright (C) 2026 ABBA Marketing Agency
-# ABBA Marketing Agency <abba-marketing-agency@api.yec.uz>, 2026.
+# ABBA Marketing Agency <abba-marketing-agency@yec.itlink.uz>, 2026.
 #
 #, fuzzy
 msgid ""
