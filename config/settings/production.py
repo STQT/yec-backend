@@ -11,8 +11,8 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["yec.itlink.uz"])
-CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=["https://yec.itlink.uz"])
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["api.yec.uz"])
+CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=["https://api.yec.uz"])
 # DATABASES
 # ------------------------------------------------------------------------------
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
@@ -82,7 +82,7 @@ STORAGES = {
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
     "DJANGO_DEFAULT_FROM_EMAIL",
-    default="Yec <noreply@yec.itlink.uz>",
+    default="Yec <noreply@api.yec.uz>",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
@@ -157,7 +157,7 @@ LOGGING = {
 # -------------------------------------------------------------------------------
 # Tools that generate code samples can use SERVERS to point to the correct domain
 SPECTACULAR_SETTINGS["SERVERS"] = [
-    {"url": "https://yec.itlink.uz", "description": "Production server"},
+    {"url": "https://api.yec.uz", "description": "Production server"},
 ]
 # Your stuff...
 # ------------------------------------------------------------------------------

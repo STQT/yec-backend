@@ -160,7 +160,7 @@ readme = "README.md"
 
 license = { text = "MIT" }
 authors = [
-  { name = "ABBA Marketing Agency", email = "abba-marketing-agency@yec.itlink.uz" },
+  { name = "ABBA Marketing Agency", email = "abba-marketing-agency@api.yec.uz" },
 ]
 requires-python = "==3.13.*"
 dependencies = [
