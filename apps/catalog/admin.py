@@ -17,6 +17,7 @@ from apps.catalog.models import (
     CompanyHistory,
     ContactFormSubmission,
     ContactPage,
+    DealerRequest,
     FAQ,
     Gallery,
     GlobalSettings,
@@ -1752,6 +1753,53 @@ class InstagramPostAdmin(admin.ModelAdmin):
             return obj.caption[:50] + "..." if len(obj.caption) > 50 else obj.caption
         return "-"
     caption_preview.short_description = "Подпись"
+
+
+@admin.register(DealerRequest)
+class DealerRequestAdmin(admin.ModelAdmin):
+    """Админка для заявок на дилерство"""
+    list_display = [
+        "id",
+        "name",
+        "company",
+        "email",
+        "message_preview",
+        "is_processed",
+        "created_at",
+    ]
+    list_display_links = ["id", "name"]
+    list_filter = ["is_processed", "created_at"]
+    search_fields = ["name", "company", "email", "message"]
+    readonly_fields = ["created_at", "updated_at"]
+    date_hierarchy = "created_at"
+    fieldsets = (
+        ("Информация о заявителе", {
+            "fields": (
+                "name",
+                "company",
+                "email",
+            )
+        }),
+        ("Обращение", {
+            "fields": (
+                "message",
+            )
+        }),
+        ("Статус обработки", {
+            "fields": (
+                "is_processed",
+                "created_at",
+                "updated_at",
+            )
+        }),
+    )
+    
+    def message_preview(self, obj):
+        """Превью сообщения (первые 100 символов)"""
+        if obj.message:
+            return obj.message[:100] + "..." if len(obj.message) > 100 else obj.message
+        return "-"
+    message_preview.short_description = "Текст обращения"
 
 
 # AdvantageCard управляется через inline на главной странице - не нужна отдельная админка

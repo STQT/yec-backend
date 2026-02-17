@@ -255,6 +255,8 @@ class GlobalSettingsTranslationOptions(TranslationOptions):
         'form_modal_text',
         'success_modal_title',
         'success_modal_text',
+        'dealer_form_title',
+        'dealer_form_description',
         'address',
         # SEO поля для страниц
         'collections_seo_title',

@@ -1353,6 +1353,17 @@ class GlobalSettings(models.Model):
         help_text='Текст в модальном окне после успешной отправки формы'
     )
     
+    # Форма на дилерство (мультиязычные поля)
+    dealer_form_title = models.CharField(
+        max_length=200,
+        verbose_name='Заголовок формы на дилерство',
+        help_text='Заголовок формы для заявки на дилерство'
+    )
+    dealer_form_description = models.TextField(
+        verbose_name='Описание формы на дилерство',
+        help_text='Описание формы для заявки на дилерство'
+    )
+    
     # Контактная информация
     email = models.EmailField(
         verbose_name='Email',
@@ -1548,4 +1559,55 @@ class InstagramPost(models.Model):
             models.Index(fields=['instagram_id']),
             models.Index(fields=['-timestamp']),
             models.Index(fields=['is_published', '-timestamp']),
+        ]
+
+
+# Модель для заявок на дилерство
+class DealerRequest(models.Model):
+    """Модель для заявок на дилерство"""
+    
+    name = models.CharField(
+        max_length=200,
+        verbose_name='Имя',
+        help_text='Имя контактного лица'
+    )
+    company = models.CharField(
+        max_length=300,
+        verbose_name='Название компании',
+        help_text='Название компании-заявителя'
+    )
+    email = models.EmailField(
+        verbose_name='Email',
+        help_text='Контактный email для связи'
+    )
+    message = models.TextField(
+        verbose_name='Текст обращения',
+        help_text='Сообщение от заявителя'
+    )
+    
+    # Служебные поля
+    is_processed = models.BooleanField(
+        default=False,
+        verbose_name='Обработано',
+        help_text='Заявка обработана менеджером'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Дата обновления'
+    )
+    
+    def __str__(self):
+        return f"{self.name} - {self.company}"
+    
+    class Meta:
+        verbose_name = 'Заявка на дилерство'
+        verbose_name_plural = 'Заявки на дилерство'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['is_processed', '-created_at']),
         ]
