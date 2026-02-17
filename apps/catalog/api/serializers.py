@@ -13,6 +13,7 @@ from apps.catalog.models import (
     CompanyHistory,
     ContactFormSubmission,
     ContactPage,
+    DealerRequest,
     FAQ,
     Gallery,
     GlobalSettings,
@@ -1274,6 +1275,38 @@ class ContactFormSubmissionSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class DealerRequestSerializer(serializers.ModelSerializer):
+    """Сериализатор для заявок на дилерство"""
+    
+    class Meta:
+        model = DealerRequest
+        fields = ["name", "company", "email", "message"]
+    
+    def validate_email(self, value):
+        """Валидация email"""
+        if not value:
+            raise serializers.ValidationError("Email обязателен для заполнения")
+        return value
+    
+    def validate_name(self, value):
+        """Валидация имени"""
+        if not value or len(value.strip()) < 2:
+            raise serializers.ValidationError("Имя должно содержать минимум 2 символа")
+        return value.strip()
+    
+    def validate_company(self, value):
+        """Валидация названия компании"""
+        if not value or len(value.strip()) < 2:
+            raise serializers.ValidationError("Название компании должно содержать минимум 2 символа")
+        return value.strip()
+    
+    def validate_message(self, value):
+        """Валидация сообщения"""
+        if not value or len(value.strip()) < 10:
+            raise serializers.ValidationError("Текст обращения должен содержать минимум 10 символов")
+        return value.strip()
+
+
 class FAQSerializer(serializers.ModelSerializer):
     """Сериализатор для FAQ"""
     
@@ -1358,6 +1391,8 @@ class GlobalSettingsSerializer(serializers.ModelSerializer):
             "form_modal_text",
             "success_modal_title",
             "success_modal_text",
+            "dealer_form_title",
+            "dealer_form_description",
             "email",
             "address",
             "phone",
@@ -1393,6 +1428,8 @@ class GlobalSettingsSerializer(serializers.ModelSerializer):
                 'form_modal_text',
                 'success_modal_title',
                 'success_modal_text',
+                'dealer_form_title',
+                'dealer_form_description',
                 'address',
                 # SEO поля
                 'collections_seo_title',

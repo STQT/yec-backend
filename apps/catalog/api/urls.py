@@ -10,6 +10,7 @@ from .views import (
     ColorViewSet,
     ContactFormSubmissionViewSet,
     ContactPageViewSet,
+    DealerRequestViewSet,
     FAQViewSet,
     GalleryViewSet,
     GlobalSettingsViewSet,
@@ -37,6 +38,7 @@ router.register("about", AboutPageViewSet, basename="about")
 router.register("contact", ContactPageViewSet, basename="contact")
 router.register("regions", RegionViewSet, basename="region")
 router.register("contact-form", ContactFormSubmissionViewSet, basename="contact-form")
+router.register("dealer-request", DealerRequestViewSet, basename="dealer-request")
 router.register("faq", FAQViewSet, basename="faq")
 router.register("advantages", AdvantageCardViewSet, basename="advantage")
 router.register("global-settings", GlobalSettingsViewSet, basename="global-settings")

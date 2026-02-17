@@ -21,6 +21,7 @@ from apps.catalog.models import (
     Color,
     ContactFormSubmission,
     ContactPage,
+    DealerRequest,
     FAQ,
     Gallery,
     GlobalSettings,
@@ -45,6 +46,7 @@ from .serializers import (
     ColorSerializer,
     ContactFormSubmissionSerializer,
     ContactPageSerializer,
+    DealerRequestSerializer,
     FAQSerializer,
     GallerySerializer,
     GlobalSettingsSerializer,
@@ -462,3 +464,21 @@ class GlobalSettingsViewSet(ListModelMixin, GenericViewSet):
             serializer = self.get_serializer(instance)
             return Response(serializer.data)
         return Response({}, status=status.HTTP_200_OK)
+
+
+@extend_schema(tags=["Форма на дилерство"])
+class DealerRequestViewSet(CreateModelMixin, GenericViewSet):
+    """ViewSet для заявок на дилерство (только POST)"""
+    queryset = DealerRequest.objects.all()
+    serializer_class = DealerRequestSerializer
+    
+    def create(self, request, *args, **kwargs):
+        """Создать новую заявку на дилерство"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        return Response(
+            {"message": "Заявка успешно отправлена", "success": True},
+            status=status.HTTP_201_CREATED
+        )
