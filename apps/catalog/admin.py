@@ -1562,6 +1562,17 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
                 "success_modal_text_en",
             )
         }),
+        # ========== ФОРМА НА ДИЛЕРСТВО ==========
+        ("Форма на дилерство", {
+            "fields": (
+                "dealer_form_title_uz",
+                "dealer_form_title_ru",
+                "dealer_form_title_en",
+                "dealer_form_description_uz",
+                "dealer_form_description_ru",
+                "dealer_form_description_en",
+            )
+        }),
         # ========== КОНТАКТНАЯ ИНФОРМАЦИЯ ==========
         ("Контактная информация", {
             "fields": (
