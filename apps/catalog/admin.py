@@ -315,6 +315,16 @@ class CarpetAdmin(admin.ModelAdmin):
         ("Статистика", {
             "fields": ("watched",)
         }),
+        ("SEO", {
+            "fields": (
+                "seo_title_uz",
+                "seo_title_ru",
+                "seo_title_en",
+                "seo_description_uz",
+                "seo_description_ru",
+                "seo_description_en",
+            )
+        }),
         ("Настройки", {
             "fields": ("is_published",)
         }),
@@ -1322,7 +1332,7 @@ class ContactPageAdmin(admin.ModelAdmin):
             )
         }),
         ("Социальные сети", {
-            "fields": ("facebook_url", "twitter_url", "linkedin_url", "instagram_url"),
+            "fields": ("facebook_url", "twitter_url", "linkedin_url", "instagram_url", "telegram_url"),
             "classes": ("collapse",)
         }),
         ("SEO", {

@@ -351,6 +351,9 @@ class CarpetListSerializer(serializers.ModelSerializer):
             "gallery_images",
             "watched",
             "created_at",
+            # SEO поля
+            "seo_title",
+            "seo_description",
         ]
         read_only_fields = ["id", "watched", "created_at"]
     
@@ -400,6 +403,18 @@ class CarpetListSerializer(serializers.ModelSerializer):
                     representation["code"] = instance.code
             else:
                 representation["code"] = instance.code
+            
+            # SEO поля
+            for field in ['seo_title', 'seo_description']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    elif representation.get(field) is None:
+                        representation[field] = getattr(instance, field, None)
+                elif representation.get(field) is None:
+                    representation[field] = getattr(instance, field, None)
         
         return representation
 
@@ -433,6 +448,9 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
             "is_published",
             "created_at",
             "update_at",
+            # SEO поля
+            "seo_title",
+            "seo_description",
         ]
         read_only_fields = ["id", "watched", "created_at", "update_at"]
     
@@ -466,10 +484,20 @@ class CarpetDetailSerializer(serializers.ModelSerializer):
                     representation["code"] = instance.code
             else:
                 representation["code"] = instance.code
+            
+            # SEO поля
+            for field in ['seo_title', 'seo_description']:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    lang_value = getattr(instance, lang_field, None)
+                    if lang_value:
+                        representation[field] = lang_value
+                    elif representation.get(field) is None:
+                        representation[field] = getattr(instance, field, None)
+                elif representation.get(field) is None:
+                    representation[field] = getattr(instance, field, None)
         
         return representation
-
-
 
 
 class NewsImageSerializer(serializers.ModelSerializer):
@@ -1124,6 +1152,7 @@ class ContactPageSerializer(serializers.ModelSerializer):
             "twitter_url",
             "linkedin_url",
             "instagram_url",
+            "telegram_url",
             # SEO поля
             "meta_title",
             "meta_description",

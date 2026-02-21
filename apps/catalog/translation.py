@@ -228,7 +228,7 @@ class GalleryTranslationOptions(TranslationOptions):
 @register(Carpet)
 class CarpetTranslationOptions(TranslationOptions):
     """Настройки переводов для ковра"""
-    fields = ('code',)
+    fields = ('code', 'seo_title', 'seo_description')
     required_languages = ('uz',)
 
 

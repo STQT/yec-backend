@@ -380,6 +380,22 @@ class Carpet(models.Model):
     is_new = models.BooleanField(default=False, verbose_name='Новый')
     is_popular = models.BooleanField(default=False, verbose_name='Популярный')
     
+    # SEO поля
+    seo_title = models.CharField(
+        max_length=70,
+        blank=True,
+        null=True,
+        verbose_name='SEO Title',
+        help_text='Заголовок страницы для поисковых систем (рекомендуется до 60 символов)'
+    )
+    seo_description = models.TextField(
+        max_length=160,
+        blank=True,
+        null=True,
+        verbose_name='SEO Description',
+        help_text='Описание страницы для поисковых систем (рекомендуется до 160 символов)'
+    )
+    
     # Связи для фильтрации
     styles = models.ManyToManyField(Style, blank=True, verbose_name='Стили', related_name='carpets')
     rooms = models.ManyToManyField(Room, blank=True, verbose_name='Комнаты', related_name='carpets')
@@ -1084,6 +1100,7 @@ class ContactPage(models.Model):
     twitter_url = models.URLField(blank=True, null=True, verbose_name='Twitter')
     linkedin_url = models.URLField(blank=True, null=True, verbose_name='LinkedIn')
     instagram_url = models.URLField(blank=True, null=True, verbose_name='Instagram')
+    telegram_url = models.URLField(blank=True, null=True, verbose_name='Telegram')
     
     # ========== SEO ПОЛЯ ==========
     # Meta теги (переводимые)
