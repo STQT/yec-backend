@@ -28,17 +28,29 @@ from apps.catalog.models import (
     SalesPoint,
     Style,
 )
+from .utils import build_absolute_uri_https
 from .utils import get_language_from_request
 
 
 class ImageFieldSerializer(serializers.ImageField):
-    """Кастомное поле для изображений с полным URL"""
+    """Кастомное поле для изображений с полным URL (https в продакшне)"""
     def to_representation(self, value):
         if not value:
             return None
         request = self.context.get("request")
         if request:
-            return request.build_absolute_uri(value.url)
+            return build_absolute_uri_https(request, value.url)
+        return value.url
+
+
+class FileFieldSerializer(serializers.FileField):
+    """Кастомное поле для файлов с полным URL (https в продакшне)"""
+    def to_representation(self, value):
+        if not value:
+            return None
+        request = self.context.get("request")
+        if request:
+            return build_absolute_uri_https(request, value.url)
         return value.url
 
 
@@ -732,7 +744,7 @@ class HomePageSerializer(serializers.ModelSerializer):
     """Сериализатор для главной страницы с поддержкой мультиязычности"""
     # Секция 1: Баннер
     banner_image = ImageFieldSerializer(required=False, allow_null=True)
-    banner_video = serializers.FileField(required=False, allow_null=True)
+    banner_video = FileFieldSerializer(required=False, allow_null=True)
     banner_showroom_image = ImageFieldSerializer(required=False, allow_null=True)
     
     # Секция 2: О нас
@@ -742,8 +754,8 @@ class HomePageSerializer(serializers.ModelSerializer):
     showroom_image = ImageFieldSerializer(required=False, allow_null=True)
     
     # Секция 4: Преимущества
-    advantage_1_icon = serializers.FileField(required=False, allow_null=True)
-    advantage_4_icon = serializers.FileField(required=False, allow_null=True)
+    advantage_1_icon = FileFieldSerializer(required=False, allow_null=True)
+    advantage_4_icon = FileFieldSerializer(required=False, allow_null=True)
     
     # Секция 5: Призыв к действию
     cta_image = ImageFieldSerializer(required=False, allow_null=True)
@@ -1033,7 +1045,7 @@ class AboutPageSerializer(serializers.ModelSerializer):
                     "order": step.order,
                     "title": getattr(step, f"title_{language}", step.title) if language != "uz" else step.title,
                     "description": getattr(step, f"description_{language}", step.description) if language != "uz" else step.description,
-                    "image": request.build_absolute_uri(step.image.url) if step.image else None,
+                    "image": build_absolute_uri_https(request, step.image.url) if step.image else None,
                 }
                 data.append(item)
             return data

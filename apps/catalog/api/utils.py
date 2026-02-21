@@ -1,5 +1,21 @@
 """Утилиты для API"""
 
+from django.conf import settings
+
+
+def build_absolute_uri_https(request, url):
+    """
+    Строит абсолютный URL, в продакшне принудительно используя https.
+    Решает проблему, когда request.build_absolute_uri возвращает http:// из-за
+    прокси/балансировщика.
+    """
+    if not request or not url:
+        return url
+    uri = request.build_absolute_uri(url)
+    if not settings.DEBUG and uri.startswith("http://"):
+        uri = "https://" + uri[7:]
+    return uri
+
 
 def get_language_from_request(request):
     """
