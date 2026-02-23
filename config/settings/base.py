@@ -497,3 +497,18 @@ INSTAGRAM_BUSINESS_ACCOUNT_ID = env("INSTAGRAM_BUSINESS_ACCOUNT_ID", default=Non
 INSTAGRAM_LOGIN_USERNAME = env("INSTAGRAM_LOGIN_USERNAME", default=None)
 INSTAGRAM_LOGIN_PASSWORD = env("INSTAGRAM_LOGIN_PASSWORD", default=None)
 INSTAGRAM_SESSION_DIR = env("INSTAGRAM_SESSION_DIR", default="/app/.config/instaloader")
+
+# Celery
+# ------------------------------------------------------------------------------
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL)
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=REDIS_URL)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+
+# Telegram notifications for form submissions
+# ------------------------------------------------------------------------------
+# Bot token from @BotFather, chat_id where to send (e.g. -1001234567890 or 123456789)
+TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default=None)
+TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", default=None)
