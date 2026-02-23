@@ -11,7 +11,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from apps.catalog.tasks import send_application_to_telegram
 from apps.catalog.models import (
     AboutPage,
     AdvantageCard,
@@ -408,7 +407,12 @@ class ContactFormSubmissionViewSet(CreateModelMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         payload = {k: str(v) if v is not None else "" for k, v in serializer.validated_data.items()}
-        send_application_to_telegram.delay("contact", payload)
+        try:
+            from apps.catalog.tasks import send_application_to_telegram
+            send_application_to_telegram.delay("contact", payload)
+        except ImportError:
+            from apps.catalog.telegram_notify import notify_telegram_application
+            notify_telegram_application("contact", payload)
 
         return Response(
             {"message": "Заявка успешно отправлена", "success": True},
@@ -481,7 +485,12 @@ class DealerRequestViewSet(CreateModelMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         payload = {k: str(v) if v is not None else "" for k, v in serializer.validated_data.items()}
-        send_application_to_telegram.delay("dealer", payload)
+        try:
+            from apps.catalog.tasks import send_application_to_telegram
+            send_application_to_telegram.delay("dealer", payload)
+        except ImportError:
+            from apps.catalog.telegram_notify import notify_telegram_application
+            notify_telegram_application("dealer", payload)
 
         return Response(
             {"message": "Заявка успешно отправлена", "success": True},

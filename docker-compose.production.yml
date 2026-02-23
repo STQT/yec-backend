@@ -26,6 +26,21 @@ services:
       - ./.envs/.production/.postgres
     command: /start
 
+  celery:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: apps_production_django
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+    command: python -m celery -A config worker -l info
+
   postgres:
     build:
       context: .

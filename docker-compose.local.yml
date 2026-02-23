@@ -2,6 +2,7 @@ volumes:
   apps_local_postgres_data: {}
   apps_local_postgres_data_backups: {}
   apps_local_instaloader_sessions: {}
+  apps_local_venv: {}
 
 services:
   django:
@@ -12,8 +13,9 @@ services:
     container_name: apps_local_django
     depends_on:
       - postgres
+      - redis
     volumes:
-      - /app/.venv
+      - apps_local_venv:/app/.venv
       - .:/app:z
       - apps_local_instaloader_sessions:/app/.config/instaloader
     env_file:
@@ -22,6 +24,30 @@ services:
     ports:
       - '8000:8000'
     command: /start
+
+  celery:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: apps_local_django
+    container_name: apps_local_celery
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+    volumes:
+      - apps_local_venv:/app/.venv
+      - .:/app:z
+      - apps_local_instaloader_sessions:/app/.config/instaloader
+    command: python -m celery -A config worker -l info
+
+  redis:
+    image: docker.io/redis:7.2
+    container_name: apps_local_redis
 
   postgres:
     build:
