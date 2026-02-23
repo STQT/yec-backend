@@ -72,8 +72,7 @@ RUN chown django:django ${APP_HOME}
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-RUN DATABASE_URL="sqlite:///tmp/compilemessages.db" \
-  DJANGO_SETTINGS_MODULE="config.settings.test" \
-  python manage.py compilemessages
+# compilemessages skipped in image: jazzmin fr locale has msgfmt errors.
+# To compile project locale only, run at deploy: python manage.py compilemessages -l ru -l uz -l en
 
 ENTRYPOINT ["/entrypoint"]
