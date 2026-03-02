@@ -1542,12 +1542,12 @@ class InstagramPost(models.Model):
         verbose_name='Локальная миниатюра',
         help_text='Скачанное изображение миниатюры для локального использования'
     )
-    media_image = models.ImageField(
+    media_image = models.FileField(
         upload_to='instagram/media/%Y/%m/',
         blank=True,
         null=True,
         verbose_name='Локальное медиа',
-        help_text='Скачанное изображение/превью для локального использования'
+        help_text='Скачанное изображение или видео для локального использования'
     )
     
     # Метрики

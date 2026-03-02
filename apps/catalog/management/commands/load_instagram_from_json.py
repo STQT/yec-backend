@@ -324,18 +324,21 @@ class Command(BaseCommand):
             )
             return False
 
-        # Определяем расширение
+        # Определяем расширение (media_image — FileField, поддерживает видео)
         ext = '.jpg'
         if 'image/' in content_type:
             ext = mimetypes.guess_extension(
                 content_type.split(';')[0].strip() or 'image/jpeg'
             ) or '.jpg'
         elif 'video/' in content_type:
-            # Для видео сохраняем превью как изображение (если пришло изображение)
             if content[:4] == b'\xff\xd8\xff':
-                ext = '.jpg'
+                ext = '.jpg'  # JPEG под видом video
+            elif file_field == 'media_image':
+                ext = mimetypes.guess_extension(
+                    content_type.split(';')[0].strip() or 'video/mp4'
+                ) or '.mp4'
             else:
-                return False  # Пропускаем бинарное видео
+                return False  # thumbnail_image — только изображения
 
         filename = f"{post.instagram_id}_{file_field}{ext}"
 
