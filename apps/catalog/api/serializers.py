@@ -1322,6 +1322,9 @@ class DealerRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = DealerRequest
         fields = ["name", "company", "email", "message"]
+        extra_kwargs = {
+            "message": {"required": False, "allow_blank": True},
+        }
     
     def validate_email(self, value):
         """Валидация email"""
@@ -1339,12 +1342,6 @@ class DealerRequestSerializer(serializers.ModelSerializer):
         """Валидация названия компании"""
         if not value or len(value.strip()) < 2:
             raise serializers.ValidationError("Название компании должно содержать минимум 2 символа")
-        return value.strip()
-    
-    def validate_message(self, value):
-        """Валидация сообщения"""
-        if not value or len(value.strip()) < 10:
-            raise serializers.ValidationError("Текст обращения должен содержать минимум 10 символов")
         return value.strip()
 
 
@@ -1397,7 +1394,7 @@ class AdvantageCardSerializer(serializers.ModelSerializer):
 class InstagramPostSerializer(serializers.ModelSerializer):
     """Сериализатор для постов Instagram"""
     post_type_display = serializers.CharField(source='get_post_type_display', read_only=True)
-    
+
     class Meta:
         model = InstagramPost
         fields = [
@@ -1416,6 +1413,25 @@ class InstagramPostSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+    def to_representation(self, instance):
+        """Приоритет локальных файлов над внешними URL для офлайн-использования"""
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+
+        def build_url(url_or_file):
+            if not url_or_file:
+                return None
+            if request and hasattr(url_or_file, "url"):
+                return request.build_absolute_uri(url_or_file.url)
+            return str(url_or_file)
+
+        if instance.thumbnail_image:
+            representation["thumbnail_url"] = build_url(instance.thumbnail_image)
+        if instance.media_image:
+            representation["media_url"] = build_url(instance.media_image)
+
+        return representation
 
 
 class GlobalSettingsSerializer(serializers.ModelSerializer):

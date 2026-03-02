@@ -1534,6 +1534,22 @@ class InstagramPost(models.Model):
         help_text='URL основного изображения или видео'
     )
     
+    # Локальные файлы (для офлайн-использования, загружаются командой load_instagram_from_json)
+    thumbnail_image = models.ImageField(
+        upload_to='instagram/thumbnails/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Локальная миниатюра',
+        help_text='Скачанное изображение миниатюры для локального использования'
+    )
+    media_image = models.ImageField(
+        upload_to='instagram/media/%Y/%m/',
+        blank=True,
+        null=True,
+        verbose_name='Локальное медиа',
+        help_text='Скачанное изображение/превью для локального использования'
+    )
+    
     # Метрики
     like_count = models.IntegerField(
         default=0,
@@ -1599,7 +1615,9 @@ class DealerRequest(models.Model):
     )
     message = models.TextField(
         verbose_name='Текст обращения',
-        help_text='Сообщение от заявителя'
+        help_text='Сообщение от заявителя',
+        blank=True,
+        null=True
     )
     
     # Служебные поля

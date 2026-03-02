@@ -1722,8 +1722,10 @@ class InstagramPostAdmin(admin.ModelAdmin):
         ("Медиа", {
             "fields": (
                 "thumbnail_url",
+                "thumbnail_image",
                 "thumbnail_preview",
                 "media_url",
+                "media_image",
                 "media_preview",
             )
         }),
@@ -1743,28 +1745,37 @@ class InstagramPostAdmin(admin.ModelAdmin):
     )
     
     def thumbnail_preview(self, obj):
-        """Превью миниатюры"""
-        if obj.thumbnail_url:
+        """Превью миниатюры (приоритет локального файла)"""
+        url = None
+        if obj.thumbnail_image:
+            url = obj.thumbnail_image.url
+        elif obj.thumbnail_url:
+            url = obj.thumbnail_url
+        if url:
             return format_html(
                 '<img src="{}" style="max-width: 100px; max-height: 100px;" />',
-                obj.thumbnail_url
+                url
             )
         return "-"
     thumbnail_preview.short_description = "Миниатюра"
     
     def media_preview(self, obj):
-        """Превью медиа"""
-        if obj.media_url:
+        """Превью медиа (приоритет локального файла)"""
+        url = None
+        if obj.media_image:
+            url = obj.media_image.url
+        elif obj.media_url:
+            url = obj.media_url
+        if url:
             if obj.post_type == 'VIDEO':
                 return format_html(
                     '<video src="{}" controls style="max-width: 300px; max-height: 300px;" />',
-                    obj.media_url
+                    url
                 )
-            else:
-                return format_html(
-                    '<img src="{}" style="max-width: 300px; max-height: 300px;" />',
-                    obj.media_url
-                )
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 300px;" />',
+                url
+            )
         return "-"
     media_preview.short_description = "Медиа"
     
