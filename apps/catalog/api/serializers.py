@@ -1040,11 +1040,13 @@ class AboutPageSerializer(serializers.ModelSerializer):
             
             data = []
             for step in steps:
+                title = getattr(step, f"title_{language}", None) or step.title
+                description = getattr(step, f"description_{language}", None) or step.description
                 item = {
                     "id": step.id,
                     "order": step.order,
-                    "title": getattr(step, f"title_{language}", step.title) if language != "uz" else step.title,
-                    "description": getattr(step, f"description_{language}", step.description) if language != "uz" else step.description,
+                    "title": title,
+                    "description": description,
                     "image": build_absolute_uri_https(request, step.image.url) if step.image else None,
                 }
                 data.append(item)
