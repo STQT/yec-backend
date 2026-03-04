@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import translation
 
 from apps.catalog.models import (
     AboutImage,
@@ -1040,8 +1041,11 @@ class AboutPageSerializer(serializers.ModelSerializer):
             
             data = []
             for step in steps:
-                title = getattr(step, f"title_{language}", None) or step.title
-                description = getattr(step, f"description_{language}", None) or step.description
+                # Используем modeltranslation через временное переключение языка,
+                # чтобы получать корректный перевод полей title/description
+                with translation.override(language):
+                    title = step.title
+                    description = step.description
                 item = {
                     "id": step.id,
                     "order": step.order,
