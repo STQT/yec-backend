@@ -837,6 +837,17 @@ class HomePageAdmin(admin.ModelAdmin):
                 "advantage_4_description_en",
             )
         }),
+        # ========== ТАБ: ИНСТАГРАМ ==========
+        ("Instagram", {
+            "fields": (
+                "instagram_section_title_uz",
+                "instagram_section_title_ru",
+                "instagram_section_title_en",
+                "instagram_section_text_uz",
+                "instagram_section_text_ru",
+                "instagram_section_text_en",
+            )
+        }),
         # ========== ТАБ 5: ПРИЗЫВ К ДЕЙСТВИЮ ==========
         ("Призыв к действию", {
             "fields": (

@@ -804,6 +804,15 @@ class HomePage(models.Model):
     )
     advantage_4_description = models.TextField(verbose_name='Описание карточки 4')
     
+    # ========== СЕКЦИЯ: ИНСТАГРАМ ==========
+    # Переводимые поля
+    instagram_section_title = models.CharField(
+        max_length=200, blank=True, null=True, verbose_name='Заголовок секции Instagram'
+    )
+    instagram_section_text = models.TextField(
+        blank=True, null=True, verbose_name='Текст секции Instagram'
+    )
+
     # ========== СЕКЦИЯ 5: ПРИЗЫВ К ДЕЙСТВИЮ ==========
     # Переводимые поля
     cta_title = models.CharField(max_length=200, verbose_name='Заголовок призыва к действию')

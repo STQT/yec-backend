@@ -799,6 +799,9 @@ class HomePageSerializer(serializers.ModelSerializer):
             "advantage_4_title",
             "advantage_4_icon",
             "advantage_4_description",
+            # Секция: Instagram
+            "instagram_section_title",
+            "instagram_section_text",
             # Секция 5: Призыв к действию
             "cta_title",
             "cta_description",
@@ -881,6 +884,15 @@ class HomePageSerializer(serializers.ModelSerializer):
                     if value:
                         representation[field] = value
             
+            # Секция: Instagram
+            multilingual_fields_instagram = ['instagram_section_title', 'instagram_section_text']
+            for field in multilingual_fields_instagram:
+                lang_field = f"{field}{lang_suffix}"
+                if hasattr(instance, lang_field):
+                    value = getattr(instance, lang_field)
+                    if value:
+                        representation[field] = value
+
             # Секция 5: Призыв к действию
             multilingual_fields_cta = ['cta_title', 'cta_description']
             for field in multilingual_fields_cta:
