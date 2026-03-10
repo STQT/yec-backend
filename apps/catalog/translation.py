@@ -51,6 +51,9 @@ class HomePageTranslationOptions(TranslationOptions):
         'advantage_3_description',
         'advantage_4_title',
         'advantage_4_description',
+        # Секция: Instagram
+        'instagram_section_title',
+        'instagram_section_text',
         # Секция 5: Призыв к действию
         'cta_title',
         'cta_description',
